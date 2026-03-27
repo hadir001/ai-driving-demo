@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Human × AI — Interface Véhicule</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Orbitron:wght@400;600;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #04060c;
+  --dash: #070a14;
+  --panel: #0a0e1a;
+  --glass: rgba(255,255,255,0.03);
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+
+  --green: #00e5a0;
+  --green-dim: rgba(0,229,160,0.12);
+  --yellow: #f5c842;
+  --yellow-dim: rgba(245,200,66,0.12);
+  --red: #ff3d5a;
+  --red-dim: rgba(255,61,90,0.12);
+  --blue: #4db8ff;
+  --blue-dim: rgba(77,184,255,0.12);
+  --purple: #b87aff;
+
+  --text: #e8edf8;
+  --text-mid: #8a94b8;
+  --text-dim: #3d4460;
+
+  --speed: 68;
+}
+
+body {
+  background: var(--bg);
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-x: hidden;
+}
+
+/* ─── META BAR ─── */
+.meta-bar {
+  width: 100%;
+  background: #02040a;
+  border-bottom: 1px solid var(--border);
+  padding: 10px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.meta-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 11px;
+  letter-spacing: .2em;
+  color: var(--text-mid);
+  text-transform: uppercase;
+}
+.scenario-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.spill {
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all .2s;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: .05em;
+}
+.spill:hover { filter: brightness(1.3); transform: translateY(-1px); }
+.spill.active { filter: brightness(1.3); }
+
+/* ─── DASHBOARD SHELL ─── */
+.dashboard-wrap {
+  width: 100%;
+  max-width: 1280px;
+  padding: 24px 20px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ─── SCENARIO LABEL ─── */
+.scenario-label {
+  text-align: center;
+  padding: 8px 0 0;
+}
+.sc-name {
+  font-family: 'Orbitron', monospace;
+  font-size: 13px;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+}
+.sc-desc {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-top: 4px;
+  font-family: 'DM Mono', monospace;
+}
+
+/* ─── MAIN DASHBOARD ─── */
+.dashboard {
+  width: 100%;
+  background: var(--dash);
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 0 80px rgba(0,0,0,.8), 0 0 0 1px var(--border);
+}
+
+/* car road bg */
+.road-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg,
+      rgba(4,6,12,0) 0%,
+      rgba(4,6,12,0.4) 60%,
+      rgba(4,6,12,0.9) 100%),
+    repeating-linear-gradient(
+      transparent 0px, transparent 60px,
+      rgba(255,255,255,0.015) 60px, rgba(255,255,255,0.015) 61px
+    );
+  pointer-events: none;
+}
+
+/* ─── TOP HUD STRIP ─── */
+.hud-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px 12px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  z-index: 2;
+}
+.hud-time {
+  font-family: 'Orbitron', monospace;
+  font-size: 13px;
+  color: var(--text-mid);
+  letter-spacing: .1em;
+}
+.hud-route {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-mid);
+}
+.route-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+.hud-status {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid;
+  letter-spacing: .1em;
+}
+
+/* ─── MAIN PANELS ─── */
+.dash-body {
+  display: grid;
+  grid-template-columns: 220px 1fr 220px;
+  min-height: 460px;
+  position: relative;
+  z-index: 2;
+}
+
+/* LEFT PANEL — Speed & Sensors */
+.panel-left {
+  border-right: 1px solid var(--border);
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* speedometer */
+.speedo-ring {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin: 0 auto;
+}
+.speedo-ring svg { width: 100%; height: 100%; }
+.speedo-val {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.speedo-num {
+  font-family: 'Orbitron', monospace;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+}
+.speedo-unit {
+  font-size: 9px;
+  color: var(--text-dim);
+  letter-spacing: .1em;
+  font-family: 'DM Mono', monospace;
+  margin-top: 2px;
+}
+
+.sensor-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sensor-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--text-mid);
+  font-family: 'DM Mono', monospace;
+}
+.sensor-bar {
+  width: 60px;
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.sensor-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 1s ease;
+}
+
+.mini-map {
+  background: rgba(0,0,0,.4);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  height: 100px;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.map-grid {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 20px 20px;
+  opacity: .4;
+}
+.map-car {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 8px;
+  height: 14px;
+  background: var(--green);
+  border-radius: 2px;
+  box-shadow: 0 0 8px var(--green);
+}
+.map-route-line {
+  position: absolute;
+  width: 2px;
+  background: linear-gradient(to top, var(--green), transparent);
+  left: 50%;
+  bottom: 44px;
+  height: 40px;
+  transform: translateX(-50%);
+}
+
+/* CENTER — Main AI Communication */
+.panel-center {
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+}
+
+/* road visualization */
+.road-view {
+  height: 180px;
+  background: linear-gradient(180deg, #0a1020 0%, #060810 100%);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.road-surface {
+  position: absolute;
+  bottom: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 160px;
+  height: 100%;
+  background: linear-gradient(180deg, #181c28 0%, #1e2235 100%);
+  clip-path: polygon(30% 0%, 70% 0%, 100% 100%, 0% 100%);
+}
+.road-line {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 3px;
+  height: 100%;
+  background: repeating-linear-gradient(
+    to top,
+    var(--yellow) 0px, var(--yellow) 18px,
+    transparent 18px, transparent 34px
+  );
+  opacity: .4;
+  animation: roadScroll 0.8s linear infinite;
+}
+@keyframes roadScroll {
+  from { background-position: 0 0; }
+  to { background-position: 0 -52px; }
+}
+
+.ego-car {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 24px;
+  filter: drop-shadow(0 0 8px rgba(0,229,160,.4));
+}
+
+.other-car {
+  position: absolute;
+  font-size: 20px;
+  transition: all .8s ease;
+}
+
+.detection-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1.5px solid;
+  transition: all .5s;
+  animation: ringPulse 2s ease-in-out infinite;
+}
+@keyframes ringPulse {
+  0%,100% { opacity: .6; transform: scale(1) translate(-50%,-50%); }
+  50% { opacity: 1; transform: scale(1.05) translate(-48%,-48%); }
+}
+
+/* AI Message Card */
+.ai-message-card {
+  border-radius: 12px;
+  border: 1px solid;
+  padding: 16px 20px;
+  position: relative;
+  overflow: hidden;
+  transition: all .4s ease;
+  flex-shrink: 0;
+}
+.ai-message-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, currentColor, transparent);
+  opacity: .4;
+}
+
+.ai-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.ai-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  animation: aiPulse 1.5s ease-in-out infinite;
+}
+@keyframes aiPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.6;transform:scale(.85)} }
+.ai-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+}
+.ai-msg-text {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+.ai-confidence {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: var(--text-dim);
+}
+.conf-track {
+  flex: 1;
+  height: 2px;
+  background: var(--border);
+  border-radius: 1px;
+  overflow: hidden;
+}
+.conf-fill {
+  height: 100%;
+  border-radius: 1px;
+  transition: width 1s ease;
+}
+
+/* Action Buttons */
+.action-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.act-btn {
+  flex: 1;
+  min-width: 100px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .08em;
+  cursor: pointer;
+  border: 1px solid;
+  transition: all .2s;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.act-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity .15s;
+}
+.act-btn:hover::after { opacity: .08; }
+.act-btn:hover { transform: translateY(-2px); filter: brightness(1.15); }
+.act-btn:active { transform: translateY(0); }
+.act-btn:disabled { opacity: .35; pointer-events: none; }
+
+.act-btn.primary { color: var(--bg); font-weight: 700; }
+
+/* Response bubble */
+.resp-toast {
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  display: none;
+  animation: toastIn .3s ease;
+}
+.resp-toast.show { display: block; }
+@keyframes toastIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
+
+/* RIGHT PANEL */
+.panel-right {
+  border-left: 1px solid var(--border);
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.info-block {
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+}
+.info-block-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+}
+.info-val {
+  font-family: 'Orbitron', monospace;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1;
+}
+.info-unit { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+
+.event-log {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow: hidden;
+}
+.log-item {
+  display: flex;
+  gap: 8px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 10px;
+  font-family: 'DM Mono', monospace;
+  animation: logIn .3s ease;
+}
+@keyframes logIn { from{opacity:0;transform:translateX(8px)} to{opacity:1;transform:none} }
+.log-time { color: var(--text-dim); flex-shrink: 0; }
+.log-msg { color: var(--text-mid); }
+.log-dot { flex-shrink: 0; width: 5px; height: 5px; border-radius: 50%; margin-top: 3px; }
+
+/* ─── AUTHORITY BAR ─── */
+.authority-bar {
+  padding: 14px 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: relative;
+  z-index: 2;
+}
+.auth-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.auth-track {
+  flex: 1;
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+.auth-human {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  border-radius: 3px;
+  background: var(--green);
+  transition: width 1.2s cubic-bezier(.4,0,.2,1);
+}
+.auth-ai {
+  position: absolute;
+  right: 0; top: 0; bottom: 0;
+  border-radius: 3px;
+  background: var(--blue);
+  transition: width 1.2s cubic-bezier(.4,0,.2,1);
+}
+.auth-labels {
+  display: flex;
+  justify-content: space-between;
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  color: var(--text-dim);
+}
+.auth-wrap { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.auth-marker {
+  font-family: 'Orbitron', monospace;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+/* ─── SCENARIO SELECTOR BAR ─── */
+.scenario-bar {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 4px 0;
+}
+.sc-btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text-mid);
+  transition: all .2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  letter-spacing: .05em;
+}
+.sc-btn:hover { border-color: var(--border2); color: var(--text); }
+.sc-btn.active { color: var(--bg); font-weight: 700; }
+.sc-num {
+  font-size: 8px;
+  opacity: .6;
+}
+
+/* ─── EMERGENCY OVERLAY ─── */
+.emergency-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  pointer-events: none;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity .3s;
+  border: 3px solid var(--red);
+  box-shadow: inset 0 0 60px rgba(255,61,90,.15), 0 0 30px rgba(255,61,90,.2);
+  animation: none;
+}
+.emergency-overlay.active {
+  opacity: 1;
+  animation: emergencyFlash 1s ease-in-out infinite;
+}
+@keyframes emergencyFlash {
+  0%,100% { box-shadow: inset 0 0 60px rgba(255,61,90,.15), 0 0 30px rgba(255,61,90,.2); }
+  50% { box-shadow: inset 0 0 100px rgba(255,61,90,.35), 0 0 60px rgba(255,61,90,.4); }
+}
+
+/* ─── SCENARIO TRANSITION ─── */
+.dash-body, .hud-top, .authority-bar {
+  transition: background .5s ease;
+}
+.scenario-view { animation: sceneIn .4s ease; }
+@keyframes sceneIn { from{opacity:0} to{opacity:1} }
+
+</style>
+</head>
+<body>
+
+<div class="meta-bar">
+  <div class="meta-title">⬡ Human × AI · Interface Véhicule</div>
+  <div class="scenario-pills" id="pills"></div>
+</div>
+
+<div class="dashboard-wrap">
+  <div class="scenario-label">
+    <div class="sc-name" id="scName"></div>
+    <div class="sc-desc" id="scDesc"></div>
+  </div>
+
+  <!-- SCENARIO SELECTOR -->
+  <div class="scenario-bar" id="scenarioBar"></div>
+
+  <!-- MAIN DASHBOARD -->
+  <div class="dashboard" id="dashboard">
+    <div class="emergency-overlay" id="emergencyOverlay"></div>
+    <div class="road-bg"></div>
+
+    <!-- TOP HUD -->
+    <div class="hud-top">
+      <div class="hud-time" id="hudTime">14:23</div>
+      <div class="hud-route">
+        <div class="route-dot"></div>
+        <span id="hudRoute">Genève → Lausanne · A1</span>
+      </div>
+      <div class="hud-status" id="hudStatus">NORMAL</div>
+    </div>
+
+    <div class="dash-body">
+      <!-- LEFT -->
+      <div class="panel-left">
+        <div class="speedo-ring">
+          <svg viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="8"/>
+            <circle cx="60" cy="60" r="52" fill="none" id="speedArc"
+              stroke="var(--green)" stroke-width="8"
+              stroke-linecap="round"
+              stroke-dasharray="326" stroke-dashoffset="110"
+              transform="rotate(-220 60 60)"
+              style="transition: stroke-dashoffset 1s ease, stroke .4s"/>
+          </svg>
+          <div class="speedo-val">
+            <div class="speedo-num" id="speedNum">68</div>
+            <div class="speedo-unit">km/h</div>
+          </div>
+        </div>
+
+        <div class="sensor-row">
+          <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--text-dim);letter-spacing:.15em;text-transform:uppercase;margin-bottom:4px">Capteurs</div>
+          <div class="sensor-item">
+            <span>Avant</span>
+            <div class="sensor-bar"><div class="sensor-fill" id="sensorFront" style="width:60%;background:var(--green)"></div></div>
+            <span id="sensorFrontVal">38m</span>
+          </div>
+          <div class="sensor-item">
+            <span>Arrière</span>
+            <div class="sensor-bar"><div class="sensor-fill" id="sensorRear" style="width:80%;background:var(--green)"></div></div>
+            <span>22m</span>
+          </div>
+          <div class="sensor-item">
+            <span>Gauche</span>
+            <div class="sensor-bar"><div class="sensor-fill" id="sensorLeft" style="width:40%;background:var(--green)"></div></div>
+            <span>libre</span>
+          </div>
+          <div class="sensor-item">
+            <span>Droite</span>
+            <div class="sensor-bar"><div class="sensor-fill" id="sensorRight" style="width:90%;background:var(--yellow)"></div></div>
+            <span>4m</span>
+          </div>
+        </div>
+
+        <div class="mini-map">
+          <div class="map-grid"></div>
+          <div class="map-route-line"></div>
+          <div class="map-car"></div>
+        </div>
+      </div>
+
+      <!-- CENTER -->
+      <div class="panel-center" id="panelCenter">
+        <!-- Road View -->
+        <div class="road-view">
+          <div class="road-surface"></div>
+          <div class="road-line"></div>
+          <div class="other-car" id="otherCar" style="top:30px;left:50%;transform:translateX(-50%)">🚗</div>
+          <div class="detection-ring" id="detectionRing" style="display:none"></div>
+          <div class="ego-car">🚙</div>
+        </div>
+
+        <!-- AI Card -->
+        <div class="ai-message-card" id="aiCard">
+          <div class="ai-badge">
+            <div class="ai-dot" id="aiDot"></div>
+            <span class="ai-label" id="aiLabel">IA · Suggestion</span>
+          </div>
+          <div class="ai-msg-text" id="aiMsg">Trafic fluide. Surveillance active.</div>
+          <div class="ai-confidence">
+            <span>Confiance</span>
+            <div class="conf-track"><div class="conf-fill" id="confFill" style="width:92%;background:var(--green)"></div></div>
+            <span id="confVal">92%</span>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="action-row" id="actionRow"></div>
+        <div class="resp-toast" id="respToast"></div>
+      </div>
+
+      <!-- RIGHT -->
+      <div class="panel-right">
+        <div class="info-block">
+          <div class="info-block-title">Autorité active</div>
+          <div class="info-val" id="authorityVal" style="color:var(--green)">Humain</div>
+          <div class="info-unit" id="authorityUnit">Conduite manuelle</div>
+        </div>
+        <div class="info-block">
+          <div class="info-block-title">Niveau d'alerte</div>
+          <div class="info-val" id="alertVal" style="color:var(--green)">NOMINAL</div>
+          <div class="info-unit" id="alertUnit">Aucun risque détecté</div>
+        </div>
+        <div class="event-log" id="eventLog">
+          <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.15em;color:var(--text-dim);text-transform:uppercase;margin-bottom:6px">Événements</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AUTHORITY BAR -->
+    <div class="authority-bar">
+      <div class="auth-label">Humain</div>
+      <div class="auth-wrap">
+        <div class="auth-track">
+          <div class="auth-human" id="authHuman" style="width:80%"></div>
+          <div class="auth-ai" id="authAI" style="width:18%"></div>
+        </div>
+        <div class="auth-labels">
+          <span id="authHumanPct">80% Contrôle</span>
+          <span id="authAIPct">18% Assistance</span>
+        </div>
+      </div>
+      <div class="auth-marker" id="authMarker" style="color:var(--green)">●</div>
+      <div class="auth-label">IA</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SCENARIOS = [
+  {
+    id: 's1',
+    emoji: '🟢',
+    name: 'Situation Normale',
+    desc: 'Trafic fluide · IA suggère seulement',
+    color: 'var(--green)',
+    colorRaw: '#00e5a0',
+    status: 'NORMAL',
+    statusColor: 'var(--green)',
+    speed: 68,
+    alert: 'NOMINAL',
+    alertUnit: 'Aucun risque détecté',
+    alertColor: 'var(--green)',
+    authority: 'Humain',
+    authorityUnit: 'Conduite manuelle',
+    authorityColor: 'var(--green)',
+    authHuman: 82,
+    authAI: 16,
+    authMarker: '●',
+    aiLabel: 'IA · Suggestion',
+    aiLabelColor: 'var(--green)',
+    aiMsg: 'Véhicule légèrement plus lent détecté devant.\nAction suggérée : Changer vers voie gauche.',
+    confidence: 91,
+    confColor: 'var(--green)',
+    cardBorder: 'rgba(0,229,160,0.25)',
+    cardBg: 'rgba(0,229,160,0.04)',
+    otherCarPos: { top: '28px', left: '50%' },
+    detection: { color: 'var(--green)', size: 60, top: '42px', left: '50%' },
+    actions: [
+      { label: '✓ Accepter', type: 'primary', bg: 'var(--green)', response: { color: 'var(--green)', bg: 'rgba(0,229,160,.1)', msg: '✓ Manœuvre initiée · Changement voie gauche en cours.' }, log: { color: 'var(--green)', msg: 'Suggestion acceptée · Voie gauche' } },
+      { label: '✕ Ignorer', type: 'secondary', response: { color: 'var(--yellow)', bg: 'rgba(245,200,66,.1)', msg: '— Suggestion ignorée. Maintien de la voie actuelle.' }, log: { color: 'var(--yellow)', msg: 'Suggestion ignorée par conducteur' } },
+    ],
+    sensorFront: { w: '60%', v: '38m', c: 'var(--green)' },
+    logs: ['14:23', '14:21', '14:19'],
+    logMsgs: ['Véhicule lent détecté', 'Route A1 — trafic normal', 'Système actif'],
+    emergency: false,
+    route: 'Genève → Lausanne · A1',
+  },
+  {
+    id: 's2',
+    emoji: '🟡',
+    name: 'Situation à Risque',
+    desc: 'Freinage brusque · IA demande confirmation',
+    color: 'var(--yellow)',
+    colorRaw: '#f5c842',
+    status: 'ATTENTION',
+    statusColor: 'var(--yellow)',
+    speed: 52,
+    alert: 'RISQUE',
+    alertUnit: 'Freinage détecté devant',
+    alertColor: 'var(--yellow)',
+    authority: 'Humain',
+    authorityUnit: 'Assistance renforcée',
+    authorityColor: 'var(--yellow)',
+    authHuman: 65,
+    authAI: 33,
+    authMarker: '◆',
+    aiLabel: 'IA · Confirmation requise',
+    aiLabelColor: 'var(--yellow)',
+    aiMsg: '⚠ Risque détecté — freinage brusque devant.\nRecommandé : Ralentir & augmenter la distance.',
+    confidence: 87,
+    confColor: 'var(--yellow)',
+    cardBorder: 'rgba(245,200,66,0.35)',
+    cardBg: 'rgba(245,200,66,0.06)',
+    otherCarPos: { top: '14px', left: '50%' },
+    detection: { color: 'var(--yellow)', size: 80, top: '36px', left: '50%' },
+    actions: [
+      { label: '✓ Appliquer', type: 'primary', bg: 'var(--yellow)', response: { color: 'var(--yellow)', bg: 'rgba(245,200,66,.12)', msg: '✓ Décélération engagée · Distance sécurité maintenue.' }, log: { color: 'var(--yellow)', msg: 'Freinage appliqué par conducteur' } },
+      { label: '✕ Refuser', type: 'secondary', response: { color: 'var(--red)', bg: 'rgba(255,61,90,.1)', msg: '⚠ Refus enregistré. Surveillance accrue activée.' }, log: { color: 'var(--red)', msg: 'Action refusée · surveillance max' } },
+    ],
+    sensorFront: { w: '25%', v: '12m', c: 'var(--yellow)' },
+    logs: ['14:31', '14:30', '14:29'],
+    logMsgs: ['Freinage brusque: véhicule n°2', 'Densité trafic ↑', 'Alerte risque générée'],
+    emergency: false,
+    route: 'Genève → Lausanne · A1',
+  },
+  {
+    id: 's3',
+    emoji: '🔴',
+    name: 'Urgence Critique',
+    desc: 'Conducteur ne réagit pas · IA prend le contrôle',
+    color: 'var(--red)',
+    colorRaw: '#ff3d5a',
+    status: 'URGENCE',
+    statusColor: 'var(--red)',
+    speed: 31,
+    alert: 'CRITIQUE',
+    alertUnit: 'Freinage d\'urgence activé',
+    alertColor: 'var(--red)',
+    authority: 'IA',
+    authorityUnit: 'Contrôle d\'urgence',
+    authorityColor: 'var(--red)',
+    authHuman: 10,
+    authAI: 88,
+    authMarker: '▲',
+    aiLabel: 'IA · Contrôle actif',
+    aiLabelColor: 'var(--red)',
+    aiMsg: '🚨 Freinage d\'urgence activé.\nMaintien de la stabilité latérale.\nContrôle restitué après stabilisation.',
+    confidence: 99,
+    confColor: 'var(--red)',
+    cardBorder: 'rgba(255,61,90,0.4)',
+    cardBg: 'rgba(255,61,90,0.08)',
+    otherCarPos: { top: '4px', left: '50%' },
+    detection: { color: 'var(--red)', size: 100, top: '26px', left: '50%' },
+    actions: [
+      { label: '↩ Reprendre contrôle', type: 'primary', bg: 'var(--red)', response: { color: 'var(--green)', bg: 'rgba(0,229,160,.1)', msg: '✓ Contrôle restitué. Situation stabilisée. Bon voyage.' }, log: { color: 'var(--green)', msg: 'Contrôle repris par conducteur' } },
+    ],
+    sensorFront: { w: '5%', v: '3m', c: 'var(--red)' },
+    logs: ['14:44', '14:44', '14:43'],
+    logMsgs: ['🚨 Urgence — IA en contrôle', 'Conducteur non-réactif 3.2s', 'Collision imminente détectée'],
+    emergency: true,
+    route: 'Genève → Lausanne · A1',
+  },
+  {
+    id: 's4',
+    emoji: '🔵',
+    name: 'Récupération',
+    desc: 'Situation stabilisée · Retour au conducteur',
+    color: 'var(--blue)',
+    colorRaw: '#4db8ff',
+    status: 'STABLE',
+    statusColor: 'var(--blue)',
+    speed: 45,
+    alert: 'STABLE',
+    alertUnit: 'Risque écarté',
+    alertColor: 'var(--blue)',
+    authority: 'Transition',
+    authorityUnit: 'Re-synchronisation',
+    authorityColor: 'var(--blue)',
+    authHuman: 55,
+    authAI: 43,
+    authMarker: '⟳',
+    aiLabel: 'IA · Récupération',
+    aiLabelColor: 'var(--blue)',
+    aiMsg: 'Situation stabilisée.\nVous pouvez reprendre le contrôle manuel.\nRésumé de l\'incident disponible.',
+    confidence: 96,
+    confColor: 'var(--blue)',
+    cardBorder: 'rgba(77,184,255,0.3)',
+    cardBg: 'rgba(77,184,255,0.05)',
+    otherCarPos: { top: '50px', left: '50%' },
+    detection: { color: 'var(--blue)', size: 50, top: '62px', left: '50%' },
+    actions: [
+      { label: '✓ Reprendre', type: 'primary', bg: 'var(--blue)', response: { color: 'var(--green)', bg: 'rgba(0,229,160,.1)', msg: '✓ Contrôle manuel actif. Bienvenue de retour.' }, log: { color: 'var(--blue)', msg: 'Reprise manuelle confirmée' } },
+      { label: '📋 Voir résumé', type: 'secondary', response: { color: 'var(--blue)', bg: 'rgba(77,184,255,.1)', msg: '📋 Freinage auto à 14:44 · Durée: 4.2s · Distance évitée: 2.8m' }, log: { color: 'var(--blue)', msg: 'Résumé incident consulté' } },
+    ],
+    sensorFront: { w: '70%', v: '44m', c: 'var(--blue)' },
+    logs: ['14:45', '14:44', '14:44'],
+    logMsgs: ['Stabilisation complète', 'Contrôle en transition', '🚨 Urgence résolue'],
+    emergency: false,
+    route: 'Genève → Lausanne · A1',
+  },
+  {
+    id: 's5',
+    emoji: '⚖️',
+    name: 'Dilemme Éthique',
+    desc: 'IA révèle un biais · Conducteur décide',
+    color: 'var(--purple)',
+    colorRaw: '#b87aff',
+    status: 'DÉCISION',
+    statusColor: 'var(--purple)',
+    speed: 40,
+    alert: 'BIAIS DÉTECTÉ',
+    alertUnit: 'Données historiques biaisées',
+    alertColor: 'var(--purple)',
+    authority: 'Humain',
+    authorityUnit: 'Décision éthique requise',
+    authorityColor: 'var(--purple)',
+    authHuman: 78,
+    authAI: 20,
+    authMarker: '◉',
+    aiLabel: 'IA · Avertissement biais',
+    aiLabelColor: 'var(--purple)',
+    aiMsg: '⚠ Biais potentiel détecté.\nCet itinéraire évite le District 7 basé sur données historiques pouvant refléter des inégalités socio-économiques.\nVotre décision ?',
+    confidence: 54,
+    confColor: 'var(--purple)',
+    cardBorder: 'rgba(184,122,255,0.3)',
+    cardBg: 'rgba(184,122,255,0.05)',
+    otherCarPos: { top: '60px', left: '60%' },
+    detection: { color: 'var(--purple)', size: 55, top: '72px', left: '62%' },
+    actions: [
+      { label: '↩ Garder la route', type: 'secondary', response: { color: 'var(--purple)', bg: 'rgba(184,122,255,.1)', msg: '— Route maintenue. Biais signalé pour révision système.' }, log: { color: 'var(--purple)', msg: 'Route maintenue (biais signalé)' } },
+      { label: '↪ Passer par D7', type: 'primary', bg: 'var(--purple)', response: { color: 'var(--green)', bg: 'rgba(0,229,160,.1)', msg: '✓ Route mise à jour. Votre correction améliore le modèle.' }, log: { color: 'var(--green)', msg: 'Biais corrigé par conducteur' } },
+    ],
+    sensorFront: { w: '75%', v: '48m', c: 'var(--green)' },
+    logs: ['15:02', '15:01', '15:00'],
+    logMsgs: ['Biais données: District 7', 'Confiance IA: réduite à 54%', 'Décision humaine requise'],
+    emergency: false,
+    route: 'Genève Centre → Aéroport',
+  },
+  {
+    id: 's6',
+    emoji: '🌐',
+    name: 'Intelligence Collective',
+    desc: 'Nid-de-poule signalé par 6 véhicules',
+    color: 'var(--blue)',
+    colorRaw: '#4db8ff',
+    status: 'RÉSEAU',
+    statusColor: 'var(--blue)',
+    speed: 61,
+    alert: 'COLLECTIF',
+    alertUnit: 'Signal réseau reçu',
+    alertColor: 'var(--blue)',
+    authority: 'Humain',
+    authorityUnit: 'Info réseau partagée',
+    authorityColor: 'var(--blue)',
+    authHuman: 80,
+    authAI: 18,
+    authMarker: '●',
+    aiLabel: 'IA · Réseau Collectif',
+    aiLabelColor: 'var(--blue)',
+    aiMsg: '🌐 6 véhicules ont signalé un nid-de-poule au km 14.2 il y a 8 min.\nNon confirmé officiellement — ralentissement préventif.',
+    confidence: 71,
+    confColor: 'var(--blue)',
+    cardBorder: 'rgba(77,184,255,0.3)',
+    cardBg: 'rgba(77,184,255,0.05)',
+    otherCarPos: { top: '35px', left: '50%' },
+    detection: { color: 'var(--blue)', size: 65, top: '48px', left: '50%' },
+    actions: [
+      { label: '✓ Confirmer danger', type: 'primary', bg: 'var(--blue)', response: { color: 'var(--blue)', bg: 'rgba(77,184,255,.1)', msg: '✓ Signalement partagé anonymement. 847 conducteurs alertés.' }, log: { color: 'var(--blue)', msg: 'Danger confirmé · réseau mis à jour' } },
+      { label: '✕ Rien trouvé', type: 'secondary', response: { color: 'var(--green)', bg: 'rgba(0,229,160,.1)', msg: '— Contre-signal envoyé. Confiance collective ajustée.' }, log: { color: 'var(--yellow)', msg: 'Contre-signal · confiance ajustée' } },
+    ],
+    sensorFront: { w: '55%', v: '34m', c: 'var(--green)' },
+    logs: ['15:14', '15:13', '15:12'],
+    logMsgs: ['Réseau: 6 signalements km14', 'Carte officielle: aucun incident', 'Ralentissement préventif -7km/h'],
+    emergency: false,
+    route: 'Lausanne → Montreux · A9',
+  },
+];
+
+let currentScenario = 0;
+let logItems = [];
+
+function pad(n) { return String(n).padStart(2, '0'); }
+function getTime() {
+  const n = new Date();
+  return `${pad(n.getHours())}:${pad(n.getMinutes())}`;
+}
+
+function buildScenarioBar() {
+  const bar = document.getElementById('scenarioBar');
+  bar.innerHTML = SCENARIOS.map((s, i) => `
+    <button class="sc-btn ${i === currentScenario ? 'active' : ''}"
+      id="sc-btn-${i}"
+      style="${i === currentScenario ? `background:${s.color};color:var(--bg);border-color:${s.color}` : ''}"
+      onclick="switchScenario(${i})">
+      ${s.emoji} <span class="sc-num">${pad(i+1)}</span> ${s.name}
+    </button>`).join('');
+}
+
+function buildPills() {
+  const pills = document.getElementById('pills');
+  const cats = [
+    { label: 'Collaboration', color: '#00e5a0' },
+    { label: 'Éthique', color: '#f5c842' },
+    { label: 'Urgence', color: '#ff3d5a' },
+    { label: 'Collectif', color: '#4db8ff' },
+  ];
+  pills.innerHTML = cats.map(c => `
+    <div class="spill" style="color:${c.color};border-color:${c.color}33;background:${c.color}11">
+      ${c.label}
+    </div>`).join('');
+}
+
+function addLog(color, msg) {
+  const log = document.getElementById('eventLog');
+  const time = getTime();
+  const item = document.createElement('div');
+  item.className = 'log-item';
+  item.innerHTML = `
+    <div class="log-dot" style="background:${color}"></div>
+    <span class="log-time">${time}</span>
+    <span class="log-msg">${msg}</span>`;
+  // Insert after title
+  const title = log.querySelector('div');
+  log.insertBefore(item, title ? title.nextSibling : log.firstChild);
+  // Keep max 5
+  const items = log.querySelectorAll('.log-item');
+  if (items.length > 5) items[items.length - 1].remove();
+}
+
+function switchScenario(idx) {
+  currentScenario = idx;
+  renderScenario();
+}
+
+function renderScenario() {
+  const s = SCENARIOS[currentScenario];
+
+  // Name + desc
+  document.getElementById('scName').textContent = `${s.emoji}  ${s.name}`;
+  document.getElementById('scName').style.color = s.color;
+  document.getElementById('scDesc').textContent = s.desc;
+
+  // Rebuild scenario bar
+  buildScenarioBar();
+
+  // HUD top
+  document.getElementById('hudTime').textContent = getTime();
+  document.getElementById('hudRoute').textContent = s.route;
+  const hudStatus = document.getElementById('hudStatus');
+  hudStatus.textContent = s.status;
+  hudStatus.style.color = s.statusColor;
+  hudStatus.style.borderColor = s.statusColor + '44';
+  hudStatus.style.background = s.statusColor + '11';
+
+  // Emergency overlay
+  const overlay = document.getElementById('emergencyOverlay');
+  if (s.emergency) overlay.classList.add('active');
+  else overlay.classList.remove('active');
+
+  // Speed
+  const speed = s.speed;
+  document.getElementById('speedNum').textContent = speed;
+  const arc = document.getElementById('speedArc');
+  const maxSpeed = 140;
+  const pct = speed / maxSpeed;
+  const circumference = 326;
+  const offset = circumference - pct * circumference * 0.75;
+  arc.style.strokeDashoffset = offset;
+  arc.style.stroke = s.color;
+
+  // Sensors
+  const sf = document.getElementById('sensorFront');
+  sf.style.width = s.sensorFront.w;
+  sf.style.background = s.sensorFront.c;
+  document.getElementById('sensorFrontVal').textContent = s.sensorFront.v;
+
+  // AI card
+  document.getElementById('aiLabel').textContent = s.aiLabel;
+  document.getElementById('aiLabel').style.color = s.aiLabelColor;
+  document.getElementById('aiDot').style.background = s.color;
+  document.getElementById('aiMsg').textContent = s.aiMsg;
+
+  const card = document.getElementById('aiCard');
+  card.style.borderColor = s.cardBorder;
+  card.style.background = s.cardBg;
+
+  const confFill = document.getElementById('confFill');
+  confFill.style.width = '0%';
+  confFill.style.background = s.confColor;
+  setTimeout(() => { confFill.style.width = s.confidence + '%'; }, 100);
+  document.getElementById('confVal').textContent = s.confidence + '%';
+
+  // Actions
+  const actionRow = document.getElementById('actionRow');
+  actionRow.innerHTML = s.actions.map((a, i) => {
+    const style = a.type === 'primary'
+      ? `background:${a.bg};color:var(--bg);border-color:${a.bg};font-weight:700`
+      : `background:transparent;color:${s.color};border-color:${s.color}44`;
+    return `<button class="act-btn ${a.type}" style="${style}" data-idx="${i}">${a.label}</button>`;
+  }).join('');
+
+  const toast = document.getElementById('respToast');
+  toast.classList.remove('show');
+
+  actionRow.querySelectorAll('.act-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = +btn.dataset.idx;
+      const action = s.actions[idx];
+      toast.style.background = action.response.bg;
+      toast.style.color = action.response.color;
+      toast.style.border = `1px solid ${action.response.color}44`;
+      toast.textContent = action.response.msg;
+      toast.classList.add('show');
+      actionRow.querySelectorAll('.act-btn').forEach(b => b.disabled = true);
+      addLog(action.log.color, action.log.msg);
+    });
+  });
+
+  // Right panel
+  const authVal = document.getElementById('authorityVal');
+  authVal.textContent = s.authority;
+  authVal.style.color = s.authorityColor;
+  document.getElementById('authorityUnit').textContent = s.authorityUnit;
+
+  const alertVal = document.getElementById('alertVal');
+  alertVal.textContent = s.alert;
+  alertVal.style.color = s.alertColor;
+  document.getElementById('alertUnit').textContent = s.alertUnit;
+
+  // Authority bar
+  const human = document.getElementById('authHuman');
+  const ai = document.getElementById('authAI');
+  human.style.width = '0%';
+  ai.style.width = '0%';
+  setTimeout(() => {
+    human.style.width = s.authHuman + '%';
+    human.style.background = s.authorityColor;
+    ai.style.width = s.authAI + '%';
+  }, 100);
+  document.getElementById('authHumanPct').textContent = `${s.authHuman}% Contrôle`;
+  document.getElementById('authAIPct').textContent = `${s.authAI}% Assistance`;
+  const marker = document.getElementById('authMarker');
+  marker.textContent = s.authMarker;
+  marker.style.color = s.color;
+
+  // Event log — seed with scenario logs
+  const log = document.getElementById('eventLog');
+  // Clear all log items
+  log.querySelectorAll('.log-item').forEach(el => el.remove());
+  s.logs.forEach((t, i) => {
+    const item = document.createElement('div');
+    item.className = 'log-item';
+    item.innerHTML = `
+      <div class="log-dot" style="background:${s.color}"></div>
+      <span class="log-time">${t}</span>
+      <span class="log-msg">${s.logMsgs[i]}</span>`;
+    log.appendChild(item);
+  });
+
+  // Other car position
+  const otherCar = document.getElementById('otherCar');
+  otherCar.style.top = s.otherCarPos.top;
+  otherCar.style.left = s.otherCarPos.left;
+
+  // Detection ring
+  const ring = document.getElementById('detectionRing');
+  if (s.detection) {
+    ring.style.display = 'block';
+    ring.style.borderColor = s.detection.color;
+    ring.style.width = s.detection.size + 'px';
+    ring.style.height = s.detection.size + 'px';
+    ring.style.top = s.detection.top;
+    ring.style.left = s.detection.left;
+    ring.style.transform = 'translate(-50%, -50%)';
+  }
+}
+
+// Clock tick
+setInterval(() => {
+  document.getElementById('hudTime').textContent = getTime();
+}, 10000);
+
+buildPills();
+renderScenario();
+</script>
+</body>
+</html>
