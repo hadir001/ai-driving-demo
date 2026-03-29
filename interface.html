@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Human × AI — Interface Véhicule</title>
+<title>Human × AI — Vehicle Interface</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Orbitron:wght@400;600;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -14,634 +14,357 @@
   --panel: #0a0e1a;
   --glass: rgba(255,255,255,0.03);
   --border: rgba(255,255,255,0.07);
-  --border2: rgba(255,255,255,0.12);
-
+  --border2: rgba(255,255,255,0.14);
   --green: #00e5a0;
-  --green-dim: rgba(0,229,160,0.12);
   --yellow: #f5c842;
-  --yellow-dim: rgba(245,200,66,0.12);
+  --orange: #ff8c42;
   --red: #ff3d5a;
-  --red-dim: rgba(255,61,90,0.12);
   --blue: #4db8ff;
-  --blue-dim: rgba(77,184,255,0.12);
   --purple: #b87aff;
-
+  --ice: #a8d8f0;
+  --snow: #dceeff;
   --text: #e8edf8;
   --text-mid: #8a94b8;
   --text-dim: #3d4460;
-
-  --speed: 68;
 }
 
 body {
   background: var(--bg);
   font-family: 'Inter', sans-serif;
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  display: flex; flex-direction: column; align-items: center;
   overflow-x: hidden;
 }
 
-/* ─── META BAR ─── */
+/* ── META BAR ── */
 .meta-bar {
-  width: 100%;
-  background: #02040a;
+  width: 100%; background: #02040a;
   border-bottom: 1px solid var(--border);
   padding: 10px 32px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
 }
-.meta-title {
-  font-family: 'Orbitron', monospace;
-  font-size: 11px;
-  letter-spacing: .2em;
-  color: var(--text-mid);
-  text-transform: uppercase;
-}
-.scenario-pills {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-.spill {
-  padding: 5px 12px;
-  border-radius: 20px;
-  font-size: 10px;
-  font-weight: 600;
-  cursor: pointer;
-  border: 1px solid transparent;
-  transition: all .2s;
-  font-family: 'DM Mono', monospace;
-  letter-spacing: .05em;
-}
-.spill:hover { filter: brightness(1.3); transform: translateY(-1px); }
-.spill.active { filter: brightness(1.3); }
+.meta-title { font-family:'Orbitron',monospace; font-size:11px; letter-spacing:.2em; color:var(--text-mid); text-transform:uppercase; }
+.meta-pills { display:flex; gap:6px; flex-wrap:wrap; }
+.spill { padding:4px 10px; border-radius:20px; font-size:10px; font-weight:600; border:1px solid transparent; font-family:'DM Mono',monospace; letter-spacing:.05em; }
 
-/* ─── DASHBOARD SHELL ─── */
-.dashboard-wrap {
-  width: 100%;
-  max-width: 1280px;
-  padding: 24px 20px 40px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
+/* ── WRAP ── */
+.dashboard-wrap { width:100%; max-width:1280px; padding:20px 20px 40px; display:flex; flex-direction:column; gap:14px; }
 
-/* ─── SCENARIO LABEL ─── */
-.scenario-label {
-  text-align: center;
-  padding: 8px 0 0;
-}
-.sc-name {
-  font-family: 'Orbitron', monospace;
-  font-size: 13px;
-  letter-spacing: .15em;
-  text-transform: uppercase;
-}
-.sc-desc {
-  font-size: 12px;
-  color: var(--text-dim);
-  margin-top: 4px;
-  font-family: 'DM Mono', monospace;
-}
+/* ── SCENARIO LABEL ── */
+.scenario-label { text-align:center; padding:4px 0 0; }
+.sc-name { font-family:'Orbitron',monospace; font-size:13px; letter-spacing:.15em; text-transform:uppercase; }
+.sc-desc { font-size:12px; color:var(--text-dim); margin-top:3px; font-family:'DM Mono',monospace; }
 
-/* ─── MAIN DASHBOARD ─── */
+/* ── STEP INDICATOR (new) ── */
+.step-indicator {
+  display:none; justify-content:center; align-items:center; gap:0;
+  padding: 0 20px;
+}
+.step-indicator.visible { display:flex; }
+.step-node {
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+  cursor:pointer;
+}
+.step-circle {
+  width:32px; height:32px; border-radius:50%; border:2px solid var(--border2);
+  display:flex; align-items:center; justify-content:center;
+  font-size:13px; font-weight:700; font-family:'Orbitron',monospace;
+  transition:all .3s; background:var(--panel); color:var(--text-dim);
+}
+.step-node.active .step-circle { border-color:var(--step-color,var(--ice)); color:var(--step-color,var(--ice)); background:rgba(168,216,240,0.1); box-shadow:0 0 12px rgba(168,216,240,0.25); }
+.step-node.done .step-circle { border-color:var(--green); background:rgba(0,229,160,0.1); color:var(--green); }
+.step-label { font-family:'DM Mono',monospace; font-size:8px; letter-spacing:.1em; text-transform:uppercase; color:var(--text-dim); text-align:center; max-width:70px; line-height:1.3; }
+.step-node.active .step-label { color:var(--step-color,var(--ice)); }
+.step-node.done .step-label { color:var(--green); }
+.step-line { width:40px; height:2px; background:var(--border); margin-bottom:16px; transition:background .4s; }
+.step-line.done { background:var(--green); }
+
+/* ── SCENARIO BAR ── */
+.scenario-bar { display:flex; gap:5px; justify-content:center; flex-wrap:wrap; }
+.sc-btn {
+  padding:7px 14px; border-radius:8px; font-family:'DM Mono',monospace; font-size:10px;
+  cursor:pointer; border:1px solid var(--border); background:var(--panel); color:var(--text-mid);
+  transition:all .2s; display:flex; align-items:center; gap:5px;
+}
+.sc-btn:hover { border-color:var(--border2); color:var(--text); }
+.sc-btn.active { color:var(--bg); font-weight:700; }
+.sc-num { font-size:8px; opacity:.6; }
+
+/* ── DASHBOARD ── */
 .dashboard {
-  width: 100%;
+  width:100%; border-radius:20px; border:1px solid var(--border);
+  overflow:hidden; position:relative;
+  box-shadow:0 0 80px rgba(0,0,0,.8);
+  transition: background 0.6s ease;
   background: var(--dash);
-  border-radius: 20px;
-  border: 1px solid var(--border);
-  overflow: hidden;
-  position: relative;
-  box-shadow: 0 0 80px rgba(0,0,0,.8), 0 0 0 1px var(--border);
 }
 
-/* car road bg */
+/* ── ROAD BG (default) ── */
 .road-bg {
-  position: absolute;
-  inset: 0;
+  position:absolute; inset:0; pointer-events:none;
+  background:linear-gradient(180deg,rgba(4,6,12,0) 0%,rgba(4,6,12,0.5) 60%,rgba(4,6,12,0.95) 100%),
+    repeating-linear-gradient(transparent 0,transparent 60px,rgba(255,255,255,0.012) 60px,rgba(255,255,255,0.012) 61px);
+  transition:opacity 0.6s ease;
+}
+
+/* ── MOUNTAIN BG (snow scenario) ── */
+.mountain-bg {
+  position:absolute; inset:0; pointer-events:none; opacity:0; transition:opacity 0.8s ease; z-index:0;
   background:
-    linear-gradient(180deg,
-      rgba(4,6,12,0) 0%,
-      rgba(4,6,12,0.4) 60%,
-      rgba(4,6,12,0.9) 100%),
-    repeating-linear-gradient(
-      transparent 0px, transparent 60px,
-      rgba(255,255,255,0.015) 60px, rgba(255,255,255,0.015) 61px
-    );
-  pointer-events: none;
+    /* snow vignette overlay */
+    radial-gradient(ellipse at 50% 0%, rgba(168,216,240,0.08) 0%, transparent 70%),
+    /* dark overlay for readability */
+    linear-gradient(180deg, rgba(4,8,20,0.3) 0%, rgba(4,8,20,0.7) 50%, rgba(4,8,20,0.95) 100%);
+}
+.mountain-bg.active { opacity:1; }
+
+/* SVG mountain scene */
+.mountain-svg {
+  position:absolute; top:0; left:0; width:100%; height:100%; opacity:0;
+  transition: opacity 0.8s ease; pointer-events:none;
+}
+.mountain-svg.active { opacity:1; }
+
+/* Snowfall */
+.snow-layer {
+  position:absolute; inset:0; pointer-events:none; overflow:hidden; opacity:0; transition:opacity 0.8s ease;
+}
+.snow-layer.active { opacity:1; }
+.snowflake {
+  position:absolute; top:-10px; color:rgba(220,238,255,0.7); font-size:10px;
+  animation:snowfall linear infinite;
+  user-select:none;
+}
+@keyframes snowfall {
+  to { transform: translateY(100vh) rotate(360deg); }
 }
 
-/* ─── TOP HUD STRIP ─── */
-.hud-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 24px 12px;
-  border-bottom: 1px solid var(--border);
-  position: relative;
-  z-index: 2;
-}
-.hud-time {
-  font-family: 'Orbitron', monospace;
-  font-size: 13px;
-  color: var(--text-mid);
-  letter-spacing: .1em;
-}
-.hud-route {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  color: var(--text-mid);
-}
-.route-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
-.hud-status {
-  font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  padding: 4px 10px;
-  border-radius: 20px;
-  border: 1px solid;
-  letter-spacing: .1em;
-}
-
-/* ─── MAIN PANELS ─── */
-.dash-body {
-  display: grid;
-  grid-template-columns: 220px 1fr 220px;
-  min-height: 460px;
-  position: relative;
-  z-index: 2;
-}
-
-/* LEFT PANEL — Speed & Sensors */
-.panel-left {
-  border-right: 1px solid var(--border);
-  padding: 24px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-/* speedometer */
-.speedo-ring {
-  position: relative;
-  width: 120px;
-  height: 120px;
-  margin: 0 auto;
-}
-.speedo-ring svg { width: 100%; height: 100%; }
-.speedo-val {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-.speedo-num {
-  font-family: 'Orbitron', monospace;
-  font-size: 28px;
-  font-weight: 700;
-  line-height: 1;
-}
-.speedo-unit {
-  font-size: 9px;
-  color: var(--text-dim);
-  letter-spacing: .1em;
-  font-family: 'DM Mono', monospace;
-  margin-top: 2px;
-}
-
-.sensor-row {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.sensor-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 10px;
-  color: var(--text-mid);
-  font-family: 'DM Mono', monospace;
-}
-.sensor-bar {
-  width: 60px;
-  height: 3px;
-  background: var(--border);
-  border-radius: 2px;
-  overflow: hidden;
-}
-.sensor-fill {
-  height: 100%;
-  border-radius: 2px;
-  transition: width 1s ease;
-}
-
-.mini-map {
-  background: rgba(0,0,0,.4);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  height: 100px;
-  position: relative;
-  overflow: hidden;
-  flex-shrink: 0;
-}
-.map-grid {
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(var(--border) 1px, transparent 1px),
-    linear-gradient(90deg, var(--border) 1px, transparent 1px);
-  background-size: 20px 20px;
-  opacity: .4;
-}
-.map-car {
-  position: absolute;
-  bottom: 30px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 8px;
-  height: 14px;
-  background: var(--green);
-  border-radius: 2px;
-  box-shadow: 0 0 8px var(--green);
-}
-.map-route-line {
-  position: absolute;
-  width: 2px;
-  background: linear-gradient(to top, var(--green), transparent);
-  left: 50%;
-  bottom: 44px;
-  height: 40px;
-  transform: translateX(-50%);
-}
-
-/* CENTER — Main AI Communication */
-.panel-center {
-  padding: 24px 28px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  position: relative;
-}
-
-/* road visualization */
-.road-view {
-  height: 180px;
-  background: linear-gradient(180deg, #0a1020 0%, #060810 100%);
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  position: relative;
-  overflow: hidden;
-  flex-shrink: 0;
-}
-.road-surface {
-  position: absolute;
-  bottom: 0; left: 50%;
-  transform: translateX(-50%);
-  width: 160px;
-  height: 100%;
-  background: linear-gradient(180deg, #181c28 0%, #1e2235 100%);
-  clip-path: polygon(30% 0%, 70% 0%, 100% 100%, 0% 100%);
-}
-.road-line {
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 3px;
-  height: 100%;
+/* Blizzard layer */
+.blizzard-layer {
+  position:absolute; inset:0; pointer-events:none; overflow:hidden; opacity:0; transition:opacity 0.5s ease;
   background: repeating-linear-gradient(
-    to top,
-    var(--yellow) 0px, var(--yellow) 18px,
-    transparent 18px, transparent 34px
+    105deg,
+    transparent 0px, transparent 8px,
+    rgba(168,216,240,0.04) 8px, rgba(168,216,240,0.04) 9px
   );
-  opacity: .4;
-  animation: roadScroll 0.8s linear infinite;
 }
-@keyframes roadScroll {
-  from { background-position: 0 0; }
-  to { background-position: 0 -52px; }
-}
-
-.ego-car {
-  position: absolute;
-  bottom: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 24px;
-  filter: drop-shadow(0 0 8px rgba(0,229,160,.4));
+.blizzard-layer.active { opacity:1; animation:blizzardMove 0.3s linear infinite; }
+@keyframes blizzardMove {
+  from { background-position:0 0; }
+  to { background-position:20px 20px; }
 }
 
-.other-car {
-  position: absolute;
-  font-size: 20px;
-  transition: all .8s ease;
+/* ── HUD TOP ── */
+.hud-top {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 24px 12px; border-bottom:1px solid var(--border);
+  position:relative; z-index:2;
 }
+.hud-time { font-family:'Orbitron',monospace; font-size:13px; color:var(--text-mid); letter-spacing:.1em; }
+.hud-route { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-mid); }
+.route-dot { width:6px; height:6px; border-radius:50%; background:var(--green); transition:background .4s; }
+.hud-status { font-family:'DM Mono',monospace; font-size:10px; padding:4px 10px; border-radius:20px; border:1px solid; letter-spacing:.1em; transition:all .4s; }
 
-.detection-ring {
-  position: absolute;
-  border-radius: 50%;
-  border: 1.5px solid;
-  transition: all .5s;
-  animation: ringPulse 2s ease-in-out infinite;
+/* ── WEATHER BAR (new for snow scenario) ── */
+.weather-bar {
+  display:none; align-items:center; gap:16px;
+  padding:8px 24px; border-bottom:1px solid var(--border);
+  position:relative; z-index:2; background:rgba(8,16,32,0.6);
 }
-@keyframes ringPulse {
-  0%,100% { opacity: .6; transform: scale(1) translate(-50%,-50%); }
-  50% { opacity: 1; transform: scale(1.05) translate(-48%,-48%); }
+.weather-bar.visible { display:flex; }
+.wx-item { display:flex; align-items:center; gap:6px; font-family:'DM Mono',monospace; font-size:10px; color:var(--text-dim); }
+.wx-val { font-family:'Orbitron',monospace; font-size:12px; font-weight:600; transition:color .4s; }
+.wx-sep { width:1px; height:24px; background:var(--border); }
+.wx-alert {
+  margin-left:auto; padding:4px 12px; border-radius:20px;
+  font-size:10px; font-weight:700; font-family:'DM Mono',monospace; letter-spacing:.08em;
+  animation:wxAlertPulse 1.5s ease-in-out infinite;
+  display:none;
 }
+.wx-alert.visible { display:block; }
+@keyframes wxAlertPulse { 0%,100%{opacity:1} 50%{opacity:.6} }
 
-/* AI Message Card */
-.ai-message-card {
-  border-radius: 12px;
-  border: 1px solid;
-  padding: 16px 20px;
-  position: relative;
-  overflow: hidden;
-  transition: all .4s ease;
-  flex-shrink: 0;
+/* ── VITALS BAR ── */
+.vitals-bar {
+  display:flex; align-items:center; gap:20px;
+  padding:8px 24px; border-bottom:1px solid var(--border);
+  position:relative; z-index:2; background:rgba(0,0,0,.2);
 }
-.ai-message-card::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, currentColor, transparent);
-  opacity: .4;
-}
+.vital-item { display:flex; align-items:center; gap:8px; font-family:'DM Mono',monospace; font-size:10px; color:var(--text-dim); }
+.vital-label { letter-spacing:.1em; text-transform:uppercase; font-size:8px; }
+.vital-val { font-size:13px; font-weight:500; font-family:'Orbitron',monospace; transition:color .5s; }
+.vital-wave { width:60px; height:20px; position:relative; overflow:hidden; }
+.vital-sep { width:1px; height:28px; background:var(--border); }
 
-.ai-badge {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
+/* ── BODY ── */
+.dash-body { display:grid; grid-template-columns:210px 1fr 210px; min-height:440px; position:relative; z-index:2; }
+
+/* LEFT */
+.panel-left { border-right:1px solid var(--border); padding:20px 14px; display:flex; flex-direction:column; gap:18px; }
+.speedo-ring { position:relative; width:110px; height:110px; margin:0 auto; }
+.speedo-ring svg { width:100%; height:100%; }
+.speedo-val { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.speedo-num { font-family:'Orbitron',monospace; font-size:26px; font-weight:700; line-height:1; transition:color .4s; }
+.speedo-unit { font-size:9px; color:var(--text-dim); letter-spacing:.1em; font-family:'DM Mono',monospace; }
+
+.sensor-row { display:flex; flex-direction:column; gap:7px; }
+.sensor-section-title { font-family:'DM Mono',monospace; font-size:8px; color:var(--text-dim); letter-spacing:.15em; text-transform:uppercase; margin-bottom:2px; }
+.sensor-item { display:flex; align-items:center; justify-content:space-between; font-size:10px; color:var(--text-mid); font-family:'DM Mono',monospace; }
+.sensor-bar { width:55px; height:3px; background:var(--border); border-radius:2px; overflow:hidden; }
+.sensor-fill { height:100%; border-radius:2px; transition:width 1s ease,background .5s; }
+
+.mini-map { background:rgba(0,0,0,.4); border:1px solid var(--border); border-radius:8px; height:90px; position:relative; overflow:hidden; flex-shrink:0; }
+.map-grid { position:absolute; inset:0; opacity:.4; background:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px); background-size:20px 20px; }
+.map-car { position:absolute; bottom:28px; left:50%; transform:translateX(-50%); width:8px; height:14px; background:var(--green); border-radius:2px; box-shadow:0 0 8px var(--green); transition:background .5s,box-shadow .5s; }
+.map-route-line { position:absolute; width:2px; background:linear-gradient(to top,var(--green),transparent); left:50%; bottom:42px; height:36px; transform:translateX(-50%); transition:background .5s; }
+
+/* Avalanche warning on mini-map */
+.map-hazard { position:absolute; top:8px; left:50%; transform:translateX(-50%); font-size:14px; display:none; animation:hazardBlink 0.8s ease-in-out infinite; }
+.map-hazard.visible { display:block; }
+@keyframes hazardBlink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+/* CENTER */
+.panel-center { padding:20px 24px; display:flex; flex-direction:column; gap:12px; position:relative; }
+
+/* ROAD VIEW */
+.road-view { height:170px; border-radius:12px; border:1px solid var(--border); position:relative; overflow:hidden; flex-shrink:0; background:linear-gradient(180deg,#0a1020 0%,#060810 100%); transition:background 0.8s ease; }
+.road-surface { position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:160px; height:100%; background:linear-gradient(180deg,#181c28 0%,#1e2235 100%); clip-path:polygon(30% 0%,70% 0%,100% 100%,0% 100%); transition:background 0.8s ease; }
+.road-line { position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:3px; height:100%; background:repeating-linear-gradient(to top,var(--yellow) 0,var(--yellow) 18px,transparent 18px,transparent 34px); opacity:.35; animation:roadScroll .8s linear infinite; }
+@keyframes roadScroll { to { background-position:0 -52px; } }
+.road-line.slowing { animation-duration:2.5s; }
+.road-line.stopped { animation-play-state:paused; }
+
+/* Snow on road */
+.road-snow { position:absolute; bottom:0; left:0; right:0; height:0; background:linear-gradient(to top,rgba(200,225,255,0.15),transparent); transition:height 1.5s ease; border-radius:0 0 12px 12px; }
+.road-snow.thick { height:40%; }
+
+/* Mountain scene in road view */
+.road-mountains { position:absolute; top:0; left:0; right:0; bottom:0; opacity:0; transition:opacity 0.8s ease; }
+.road-mountains.active { opacity:1; }
+
+.ego-car { position:absolute; bottom:14px; left:50%; transform:translateX(-50%); font-size:24px; filter:drop-shadow(0 0 8px rgba(0,229,160,.4)); transition:filter .5s; }
+.other-car { position:absolute; font-size:20px; transition:all .8s ease; }
+.detection-ring { position:absolute; border-radius:50%; border:1.5px solid; transition:all .5s; animation:ringPulse 2s ease-in-out infinite; }
+@keyframes ringPulse { 0%,100%{opacity:.6;transform:scale(1) translate(-50%,-50%)} 50%{opacity:1;transform:scale(1.05) translate(-48%,-48%)} }
+
+/* Avalanche visual */
+.avalanche-mass {
+  position:absolute; top:-30px; left:0; right:0; height:80px;
+  background:linear-gradient(180deg,rgba(180,210,240,0.9) 0%,rgba(200,225,255,0.6) 60%,transparent 100%);
+  border-radius:0 0 40% 40%;
+  display:none; animation:avalancheDown 2s ease-in forwards;
 }
-.ai-dot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  animation: aiPulse 1.5s ease-in-out infinite;
-}
+.avalanche-mass.active { display:block; }
+@keyframes avalancheDown { from{top:-80px;opacity:0} to{top:20px;opacity:1} }
+
+/* DRIVER STATE WIDGET */
+.driver-state-widget { background:rgba(0,0,0,.4); border:1px solid var(--border); border-radius:10px; padding:12px 14px; display:none; flex-direction:column; gap:8px; }
+.driver-state-widget.visible { display:flex; }
+.dsw-title { font-family:'DM Mono',monospace; font-size:8px; letter-spacing:.18em; text-transform:uppercase; color:var(--text-dim); }
+.dsw-indicators { display:flex; gap:10px; }
+.dsw-ind { flex:1; background:var(--panel); border-radius:6px; padding:8px; border:1px solid var(--border); text-align:center; }
+.dsw-ind-val { font-family:'Orbitron',monospace; font-size:16px; font-weight:700; line-height:1; }
+.dsw-ind-label { font-family:'DM Mono',monospace; font-size:8px; color:var(--text-dim); margin-top:3px; letter-spacing:.1em; }
+
+/* AI CARD */
+.ai-message-card { border-radius:12px; border:1px solid; padding:14px 18px; position:relative; overflow:hidden; transition:all .4s ease; flex-shrink:0; }
+.ai-message-card::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,currentColor,transparent); opacity:.4; }
+.ai-badge { display:flex; align-items:center; gap:8px; margin-bottom:9px; }
+.ai-dot { width:8px; height:8px; border-radius:50%; animation:aiPulse 1.5s ease-in-out infinite; }
 @keyframes aiPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.6;transform:scale(.85)} }
-.ai-label {
-  font-family: 'DM Mono', monospace;
-  font-size: 9px;
-  letter-spacing: .2em;
-  text-transform: uppercase;
-}
-.ai-msg-text {
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 1.5;
-  color: var(--text);
-  margin-bottom: 12px;
-}
-.ai-confidence {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-family: 'DM Mono', monospace;
-  font-size: 9px;
-  color: var(--text-dim);
-}
-.conf-track {
-  flex: 1;
-  height: 2px;
-  background: var(--border);
-  border-radius: 1px;
-  overflow: hidden;
-}
-.conf-fill {
-  height: 100%;
-  border-radius: 1px;
-  transition: width 1s ease;
-}
+.ai-label { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.2em; text-transform:uppercase; }
+.ai-msg-text { font-size:13px; font-weight:500; line-height:1.55; color:var(--text); margin-bottom:10px; white-space:pre-line; }
+.ai-confidence { display:flex; align-items:center; gap:8px; font-family:'DM Mono',monospace; font-size:9px; color:var(--text-dim); }
+.conf-track { flex:1; height:2px; background:var(--border); border-radius:1px; overflow:hidden; }
+.conf-fill { height:100%; border-radius:1px; transition:width 1s ease; }
 
-/* Action Buttons */
-.action-row {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-.act-btn {
-  flex: 1;
-  min-width: 100px;
-  padding: 12px 16px;
-  border-radius: 10px;
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: .08em;
-  cursor: pointer;
-  border: 1px solid;
-  transition: all .2s;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-}
-.act-btn::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: currentColor;
-  opacity: 0;
-  transition: opacity .15s;
-}
-.act-btn:hover::after { opacity: .08; }
-.act-btn:hover { transform: translateY(-2px); filter: brightness(1.15); }
-.act-btn:active { transform: translateY(0); }
-.act-btn:disabled { opacity: .35; pointer-events: none; }
+/* COUNTDOWN WIDGET */
+.countdown-widget { display:none; border-radius:10px; overflow:hidden; border:1px solid; position:relative; }
+.countdown-widget.visible { display:block; }
+.cdw-bg { position:absolute; inset:0; opacity:.08; }
+.cdw-inner { position:relative; z-index:1; padding:12px 16px; }
+.cdw-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+.cdw-label { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.15em; text-transform:uppercase; }
+.cdw-number { font-family:'Orbitron',monospace; font-size:36px; font-weight:900; line-height:1; text-align:center; margin:4px 0 8px; animation:countPulse .9s ease-in-out infinite; }
+@keyframes countPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
+.cdw-track { height:8px; background:rgba(255,255,255,.08); border-radius:4px; overflow:hidden; }
+.cdw-fill { height:100%; border-radius:4px; transition:width 1s linear; }
+.cdw-msg { font-size:11px; color:var(--text-mid); margin-top:8px; font-family:'DM Mono',monospace; text-align:center; }
 
-.act-btn.primary { color: var(--bg); font-weight: 700; }
+/* ACTIONS */
+.action-row { display:flex; gap:9px; flex-wrap:wrap; }
+.act-btn { flex:1; min-width:90px; padding:11px 14px; border-radius:10px; font-family:'DM Mono',monospace; font-size:11px; font-weight:500; letter-spacing:.08em; cursor:pointer; border:1px solid; transition:all .2s; text-align:center; position:relative; overflow:hidden; }
+.act-btn:hover { transform:translateY(-2px); filter:brightness(1.15); }
+.act-btn:active { transform:translateY(0); }
+.act-btn:disabled { opacity:.35; pointer-events:none; }
+.act-btn.primary { font-weight:700; }
 
-/* Response bubble */
-.resp-toast {
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  line-height: 1.5;
-  display: none;
-  animation: toastIn .3s ease;
-}
-.resp-toast.show { display: block; }
+.resp-toast { border-radius:8px; padding:10px 14px; font-family:'DM Mono',monospace; font-size:11px; line-height:1.5; display:none; animation:toastIn .3s ease; }
+.resp-toast.show { display:block; }
 @keyframes toastIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
 
-/* RIGHT PANEL */
-.panel-right {
-  border-left: 1px solid var(--border);
-  padding: 20px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.info-block {
-  background: var(--glass);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 14px;
-}
-.info-block-title {
-  font-family: 'DM Mono', monospace;
-  font-size: 8px;
-  letter-spacing: .2em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-  margin-bottom: 10px;
-}
-.info-val {
-  font-family: 'Orbitron', monospace;
-  font-size: 20px;
-  font-weight: 600;
-  line-height: 1;
-}
-.info-unit { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
-
-.event-log {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  overflow: hidden;
-}
-.log-item {
-  display: flex;
-  gap: 8px;
-  padding: 7px 0;
-  border-bottom: 1px solid var(--border);
-  font-size: 10px;
-  font-family: 'DM Mono', monospace;
-  animation: logIn .3s ease;
-}
+/* RIGHT */
+.panel-right { border-left:1px solid var(--border); padding:18px 14px; display:flex; flex-direction:column; gap:14px; }
+.info-block { background:var(--glass); border:1px solid var(--border); border-radius:10px; padding:12px; }
+.info-block-title { font-family:'DM Mono',monospace; font-size:8px; letter-spacing:.2em; text-transform:uppercase; color:var(--text-dim); margin-bottom:8px; }
+.info-val { font-family:'Orbitron',monospace; font-size:18px; font-weight:600; line-height:1; transition:color .5s; }
+.info-unit { font-size:10px; color:var(--text-dim); margin-top:2px; }
+.event-log { flex:1; display:flex; flex-direction:column; gap:0; overflow:hidden; }
+.log-item { display:flex; gap:7px; padding:6px 0; border-bottom:1px solid var(--border); font-size:10px; font-family:'DM Mono',monospace; animation:logIn .3s ease; }
 @keyframes logIn { from{opacity:0;transform:translateX(8px)} to{opacity:1;transform:none} }
-.log-time { color: var(--text-dim); flex-shrink: 0; }
-.log-msg { color: var(--text-mid); }
-.log-dot { flex-shrink: 0; width: 5px; height: 5px; border-radius: 50%; margin-top: 3px; }
+.log-time { color:var(--text-dim); flex-shrink:0; }
+.log-msg { color:var(--text-mid); }
+.log-dot { flex-shrink:0; width:5px; height:5px; border-radius:50%; margin-top:3px; }
 
-/* ─── AUTHORITY BAR ─── */
-.authority-bar {
-  padding: 14px 24px;
-  border-top: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  position: relative;
-  z-index: 2;
-}
-.auth-label {
-  font-family: 'DM Mono', monospace;
-  font-size: 9px;
-  letter-spacing: .15em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-  white-space: nowrap;
-}
-.auth-track {
-  flex: 1;
-  height: 6px;
-  background: var(--border);
-  border-radius: 3px;
-  overflow: hidden;
-  position: relative;
-}
-.auth-human {
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  border-radius: 3px;
-  background: var(--green);
-  transition: width 1.2s cubic-bezier(.4,0,.2,1);
-}
-.auth-ai {
-  position: absolute;
-  right: 0; top: 0; bottom: 0;
-  border-radius: 3px;
-  background: var(--blue);
-  transition: width 1.2s cubic-bezier(.4,0,.2,1);
-}
-.auth-labels {
-  display: flex;
-  justify-content: space-between;
-  font-family: 'DM Mono', monospace;
-  font-size: 8px;
-  color: var(--text-dim);
-}
-.auth-wrap { flex: 1; display: flex; flex-direction: column; gap: 4px; }
-.auth-marker {
-  font-family: 'Orbitron', monospace;
-  font-size: 10px;
-  white-space: nowrap;
-}
+/* AUTHORITY BAR */
+.authority-bar { display:flex; align-items:center; gap:14px; padding:12px 24px; border-top:1px solid var(--border); position:relative; z-index:2; }
+.auth-label { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.15em; text-transform:uppercase; color:var(--text-dim); white-space:nowrap; }
+.auth-wrap { flex:1; display:flex; flex-direction:column; gap:4px; }
+.auth-track { flex:1; height:6px; background:var(--border); border-radius:3px; overflow:hidden; position:relative; }
+.auth-human { position:absolute; left:0; top:0; bottom:0; border-radius:3px; background:var(--green); transition:width 1.2s cubic-bezier(.4,0,.2,1),background .5s; }
+.auth-ai { position:absolute; right:0; top:0; bottom:0; border-radius:3px; background:var(--blue); transition:width 1.2s cubic-bezier(.4,0,.2,1); }
+.auth-labels { display:flex; justify-content:space-between; font-family:'DM Mono',monospace; font-size:8px; color:var(--text-dim); }
+.auth-marker { font-family:'Orbitron',monospace; font-size:10px; white-space:nowrap; }
 
-/* ─── SCENARIO SELECTOR BAR ─── */
-.scenario-bar {
-  display: flex;
-  gap: 6px;
-  justify-content: center;
-  flex-wrap: wrap;
-  padding: 4px 0;
-}
-.sc-btn {
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  cursor: pointer;
-  border: 1px solid var(--border);
-  background: var(--panel);
-  color: var(--text-mid);
-  transition: all .2s;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  letter-spacing: .05em;
-}
-.sc-btn:hover { border-color: var(--border2); color: var(--text); }
-.sc-btn.active { color: var(--bg); font-weight: 700; }
-.sc-num {
-  font-size: 8px;
-  opacity: .6;
-}
+/* ── OVERLAYS ── */
+.emergency-overlay { position:absolute; inset:0; border-radius:20px; pointer-events:none; z-index:10; opacity:0; transition:opacity .3s; border:3px solid var(--red); box-shadow:inset 0 0 60px rgba(255,61,90,.15),0 0 30px rgba(255,61,90,.2); }
+.emergency-overlay.active { opacity:1; animation:emergencyFlash 1s ease-in-out infinite; }
+@keyframes emergencyFlash { 0%,100%{box-shadow:inset 0 0 60px rgba(255,61,90,.15),0 0 30px rgba(255,61,90,.2)} 50%{box-shadow:inset 0 0 100px rgba(255,61,90,.35),0 0 60px rgba(255,61,90,.4)} }
 
-/* ─── EMERGENCY OVERLAY ─── */
-.emergency-overlay {
-  position: absolute;
-  inset: 0;
-  border-radius: 20px;
-  pointer-events: none;
-  z-index: 10;
-  opacity: 0;
-  transition: opacity .3s;
-  border: 3px solid var(--red);
-  box-shadow: inset 0 0 60px rgba(255,61,90,.15), 0 0 30px rgba(255,61,90,.2);
-  animation: none;
-}
-.emergency-overlay.active {
-  opacity: 1;
-  animation: emergencyFlash 1s ease-in-out infinite;
-}
-@keyframes emergencyFlash {
-  0%,100% { box-shadow: inset 0 0 60px rgba(255,61,90,.15), 0 0 30px rgba(255,61,90,.2); }
-  50% { box-shadow: inset 0 0 100px rgba(255,61,90,.35), 0 0 60px rgba(255,61,90,.4); }
-}
+.orange-overlay { position:absolute; inset:0; border-radius:20px; pointer-events:none; z-index:10; opacity:0; transition:opacity .3s; border:3px solid var(--orange); }
+.orange-overlay.active { opacity:1; animation:orangeFlash 2s ease-in-out infinite; }
+@keyframes orangeFlash { 0%,100%{box-shadow:inset 0 0 40px rgba(255,140,66,.1)} 50%{box-shadow:inset 0 0 80px rgba(255,140,66,.25)} }
 
-/* ─── SCENARIO TRANSITION ─── */
-.dash-body, .hud-top, .authority-bar {
-  transition: background .5s ease;
-}
-.scenario-view { animation: sceneIn .4s ease; }
-@keyframes sceneIn { from{opacity:0} to{opacity:1} }
+/* ── ICE/SNOW OVERLAY ── */
+.snow-overlay { position:absolute; inset:0; border-radius:20px; pointer-events:none; z-index:10; opacity:0; transition:opacity .4s; border:3px solid var(--ice); }
+.snow-overlay.warn { opacity:1; box-shadow:inset 0 0 40px rgba(168,216,240,.08),0 0 20px rgba(168,216,240,.15); border-color:var(--ice); }
+.snow-overlay.critical { opacity:1; border-color:#ff3d5a; animation:snowCritical 0.7s ease-in-out infinite; box-shadow:inset 0 0 80px rgba(255,61,90,.2),0 0 40px rgba(255,61,90,.3); }
+@keyframes snowCritical { 0%,100%{box-shadow:inset 0 0 80px rgba(255,61,90,.2),0 0 40px rgba(255,61,90,.3)} 50%{box-shadow:inset 0 0 140px rgba(255,61,90,.4),0 0 80px rgba(255,61,90,.5)} }
 
+/* AMBULANCE OVERLAY */
+.ambulance-overlay { position:absolute; inset:0; border-radius:20px; z-index:20; background:rgba(4,6,12,.88); backdrop-filter:blur(4px); display:none; flex-direction:column; align-items:center; justify-content:center; gap:16px; animation:fadeIn .4s ease; }
+.ambulance-overlay.active { display:flex; }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+.amb-icon { font-size:56px; animation:ambPulse 1s ease-in-out infinite; }
+@keyframes ambPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.12)} }
+.amb-title { font-family:'Orbitron',monospace; font-size:18px; font-weight:700; color:var(--red); letter-spacing:.1em; text-align:center; }
+.amb-status { font-family:'DM Mono',monospace; font-size:12px; color:var(--text-mid); text-align:center; line-height:1.8; }
+.amb-btn { margin-top:8px; padding:12px 28px; border-radius:10px; background:var(--green); color:var(--bg); border:none; font-family:'DM Mono',monospace; font-size:12px; font-weight:700; letter-spacing:.1em; cursor:pointer; transition:all .2s; }
+.amb-btn:hover { filter:brightness(1.15); transform:translateY(-2px); }
 </style>
 </head>
 <body>
 
 <div class="meta-bar">
-  <div class="meta-title">⬡ Human × AI · Interface Véhicule</div>
-  <div class="scenario-pills" id="pills"></div>
+  <div class="meta-title">⬡ Human × AI · Vehicle Interface</div>
+  <div class="meta-pills">
+    <div class="spill" style="color:#00e5a0;border-color:#00e5a044;background:#00e5a011">Collaboration</div>
+    <div class="spill" style="color:#f5c842;border-color:#f5c84244;background:#f5c84211">Ethics</div>
+    <div class="spill" style="color:#ff3d5a;border-color:#ff3d5a44;background:#ff3d5a11">Emergency</div>
+    <div class="spill" style="color:#4db8ff;border-color:#4db8ff44;background:#4db8ff11">Collective</div>
+    <div class="spill" style="color:#ff8c42;border-color:#ff8c4244;background:#ff8c4211">Medical ✦</div>
+    <div class="spill" style="color:#a8d8f0;border-color:#a8d8f044;background:#a8d8f011">Extreme Env. ✦ New</div>
+  </div>
 </div>
 
 <div class="dashboard-wrap">
@@ -650,22 +373,145 @@ body {
     <div class="sc-desc" id="scDesc"></div>
   </div>
 
-  <!-- SCENARIO SELECTOR -->
+  <!-- STEP INDICATOR (shown for snow scenario) -->
+  <div class="step-indicator" id="stepIndicator">
+    <div class="step-node" id="step-0" style="--step-color:#a8d8f0" onclick="goToEnvStep(0)">
+      <div class="step-circle">1</div>
+      <div class="step-label">Early Detection</div>
+    </div>
+    <div class="step-line" id="step-line-0"></div>
+    <div class="step-node" id="step-1" style="--step-color:#f5c842" onclick="goToEnvStep(1)">
+      <div class="step-circle">2</div>
+      <div class="step-label">Collaborative Action</div>
+    </div>
+    <div class="step-line" id="step-line-1"></div>
+    <div class="step-node" id="step-2" style="--step-color:#ff3d5a" onclick="goToEnvStep(2)">
+      <div class="step-circle">3</div>
+      <div class="step-label">AI Takes Control</div>
+    </div>
+    <div class="step-line" id="step-line-2"></div>
+    <div class="step-node" id="step-3" style="--step-color:#00e5a0" onclick="goToEnvStep(3)">
+      <div class="step-circle">4</div>
+      <div class="step-label">Recovery & Handback</div>
+    </div>
+  </div>
+
   <div class="scenario-bar" id="scenarioBar"></div>
 
-  <!-- MAIN DASHBOARD -->
+  <!-- DASHBOARD -->
   <div class="dashboard" id="dashboard">
+    <!-- Overlays -->
     <div class="emergency-overlay" id="emergencyOverlay"></div>
-    <div class="road-bg"></div>
+    <div class="orange-overlay" id="orangeOverlay"></div>
+    <div class="snow-overlay" id="snowOverlay"></div>
+    <div class="ambulance-overlay" id="ambulanceOverlay">
+      <div class="amb-icon">🚑</div>
+      <div class="amb-title">AMBULANCE CALLED</div>
+      <div class="amb-status" id="ambStatus">Driver unconscious · AI in full control<br>Emergency stop initiated · Hazard lights active<br>Location transmitted to emergency services</div>
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text-dim)">📍 A1 · km 14.2 · Geneva direction Lausanne</div>
+      <button class="amb-btn" id="ambOkBtn">✓ Driver conscious — Cancel ambulance</button>
+    </div>
+
+    <!-- Mountain bg -->
+    <div class="mountain-bg" id="mountainBg"></div>
+    <svg class="mountain-svg" id="mountainSvg" viewBox="0 0 1280 600" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#060d1f"/>
+          <stop offset="100%" stop-color="#0d1a30"/>
+        </linearGradient>
+        <linearGradient id="snowGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#d0e8f8" stop-opacity="0.9"/>
+          <stop offset="100%" stop-color="#a8c8e8" stop-opacity="0.7"/>
+        </linearGradient>
+        <linearGradient id="mountainGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#1a2840"/>
+          <stop offset="100%" stop-color="#0a1220"/>
+        </linearGradient>
+        <filter id="snowBlur"><feGaussianBlur stdDeviation="1"/></filter>
+      </defs>
+      <!-- Sky -->
+      <rect width="1280" height="600" fill="url(#skyGrad)"/>
+      <!-- Stars -->
+      <g opacity="0.4">
+        <circle cx="100" cy="40" r="1" fill="white"/><circle cx="240" cy="20" r="1.2" fill="white"/><circle cx="380" cy="55" r="0.8" fill="white"/>
+        <circle cx="520" cy="30" r="1" fill="white"/><circle cx="680" cy="15" r="1.3" fill="white"/><circle cx="820" cy="45" r="0.9" fill="white"/>
+        <circle cx="960" cy="25" r="1" fill="white"/><circle cx="1100" cy="50" r="1.1" fill="white"/><circle cx="1200" cy="35" r="0.8" fill="white"/>
+      </g>
+      <!-- Far mountains (dark) -->
+      <polygon points="0,300 120,120 240,200 360,80 480,180 600,60 720,160 840,100 960,200 1080,80 1200,160 1280,120 1280,400 0,400" fill="url(#mountainGrad)" opacity="0.8"/>
+      <!-- Snow caps on far mountains -->
+      <polygon points="600,60 560,100 640,100" fill="url(#snowGrad)" opacity="0.6" filter="url(#snowBlur)"/>
+      <polygon points="1080,80 1050,110 1110,110" fill="url(#snowGrad)" opacity="0.5" filter="url(#snowBlur)"/>
+      <polygon points="360,80 330,115 395,115" fill="url(#snowGrad)" opacity="0.5" filter="url(#snowBlur)"/>
+      <!-- Near mountains (darker, larger) -->
+      <polygon points="0,400 200,200 400,320 600,160 800,280 1000,150 1200,260 1280,220 1280,600 0,600" fill="#0a0f1e"/>
+      <!-- Snow on near mountains -->
+      <polygon points="600,160 550,210 650,210" fill="url(#snowGrad)" opacity="0.8"/>
+      <polygon points="1000,150 950,210 1060,210" fill="url(#snowGrad)" opacity="0.7"/>
+      <polygon points="200,200 160,240 250,240" fill="url(#snowGrad)" opacity="0.7"/>
+      <!-- Snowy road surface -->
+      <polygon points="440,600 520,320 760,320 840,600" fill="#101828" opacity="0.9"/>
+      <!-- Road center line (partially covered in snow) -->
+      <line x1="640" y1="600" x2="640" y2="340" stroke="#2a3a50" stroke-width="2" stroke-dasharray="20,15" opacity="0.4"/>
+      <!-- Snow on road -->
+      <ellipse cx="640" cy="580" rx="200" ry="20" fill="#c8dff0" opacity="0.12"/>
+      <!-- Tree silhouettes left -->
+      <rect x="80" y="320" width="8" height="60" fill="#060c18"/>
+      <polygon points="84,285 60,340 108,340" fill="#080e1c"/>
+      <polygon points="84,310 64,350 104,350" fill="#080e1c"/>
+      <rect x="160" y="330" width="7" height="50" fill="#060c18"/>
+      <polygon points="163,295 141,345 185,345" fill="#080e1c"/>
+      <!-- Tree silhouettes right -->
+      <rect x="1150" y="320" width="8" height="60" fill="#060c18"/>
+      <polygon points="1154,285 1130,340 1178,340" fill="#080e1c"/>
+      <rect x="1080" y="330" width="7" height="50" fill="#060c18"/>
+      <polygon points="1083,295 1061,345 1105,345" fill="#080e1c"/>
+      <!-- Avalanche zone indicator -->
+      <path id="avalancheZone" d="M580,160 L700,160 L760,320 L520,320 Z" fill="rgba(255,61,90,0.0)" stroke="rgba(255,61,90,0)" stroke-width="2"/>
+      <!-- Ground snow -->
+      <ellipse cx="640" cy="595" rx="640" ry="25" fill="#0f1826" opacity="0.95"/>
+    </svg>
+
+    <!-- Snow particles layer -->
+    <div class="snow-layer" id="snowLayer"></div>
+    <!-- Blizzard -->
+    <div class="blizzard-layer" id="blizzardLayer"></div>
+
+    <div class="road-bg" id="roadBg"></div>
 
     <!-- TOP HUD -->
     <div class="hud-top">
-      <div class="hud-time" id="hudTime">14:23</div>
-      <div class="hud-route">
-        <div class="route-dot"></div>
-        <span id="hudRoute">Genève → Lausanne · A1</span>
-      </div>
+      <div class="hud-time" id="hudTime">07:42</div>
+      <div class="hud-route"><div class="route-dot" id="routeDot"></div><span id="hudRoute">Geneva → Lausanne · A1</span></div>
       <div class="hud-status" id="hudStatus">NORMAL</div>
+    </div>
+
+    <!-- WEATHER BAR -->
+    <div class="weather-bar" id="weatherBar">
+      <div class="wx-item"><div class="vital-label">TEMPERATURE</div><div class="wx-val" id="wxTemp" style="color:var(--ice)">-8°C</div></div>
+      <div class="wx-sep"></div>
+      <div class="wx-item"><div class="vital-label">VISIBILITY</div><div class="wx-val" id="wxVis" style="color:var(--ice)">420m</div></div>
+      <div class="wx-sep"></div>
+      <div class="wx-item"><div class="vital-label">WIND</div><div class="wx-val" id="wxWind" style="color:var(--ice)">62 km/h</div></div>
+      <div class="wx-sep"></div>
+      <div class="wx-item"><div class="vital-label">ROAD</div><div class="wx-val" id="wxRoad" style="color:var(--yellow)">ICY</div></div>
+      <div class="wx-sep"></div>
+      <div class="wx-item"><div class="vital-label">AVALANCHE RISK</div><div class="wx-val" id="wxAvalanche" style="color:var(--yellow)">MODERATE</div></div>
+      <div class="wx-alert" id="wxAlert" style="color:var(--bg);background:var(--red)">🚨 AVALANCHE ALERT</div>
+    </div>
+
+    <!-- VITALS BAR -->
+    <div class="vitals-bar" id="vitalsBar">
+      <div class="vital-item"><div><div class="vital-label">Heart Rate</div><div class="vital-val" id="vitalHR" style="color:var(--green)">72 <span style="font-size:9px;opacity:.5">bpm</span></div></div><div class="vital-wave"><svg width="60" height="20" viewBox="0 0 60 20"><polyline id="ekgLine" points="0,10 8,10 12,3 16,18 20,10 28,10 32,3 36,18 40,10 48,10 52,3 56,18 60,10" fill="none" stroke="var(--green)" stroke-width="1.5" stroke-linecap="round" style="transition:stroke .5s"/></svg></div></div>
+      <div class="vital-sep"></div>
+      <div class="vital-item"><div><div class="vital-label">Grip Tension</div><div class="vital-val" id="vitalTension" style="color:var(--green)">Normal</div></div></div>
+      <div class="vital-sep"></div>
+      <div class="vital-item"><div><div class="vital-label">Blink Rate</div><div class="vital-val" id="vitalBlink" style="color:var(--green)">18</div></div></div>
+      <div class="vital-sep"></div>
+      <div class="vital-item"><div><div class="vital-label">Steering Drift</div><div class="vital-val" id="vitalDrift" style="color:var(--green)">±0.8°</div></div></div>
+      <div class="vital-sep"></div>
+      <div class="vital-item"><div><div class="vital-label">Driver State</div><div class="vital-val" id="vitalState" style="color:var(--green)">Alert</div></div></div>
     </div>
 
     <div class="dash-body">
@@ -674,12 +520,7 @@ body {
         <div class="speedo-ring">
           <svg viewBox="0 0 120 120">
             <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="8"/>
-            <circle cx="60" cy="60" r="52" fill="none" id="speedArc"
-              stroke="var(--green)" stroke-width="8"
-              stroke-linecap="round"
-              stroke-dasharray="326" stroke-dashoffset="110"
-              transform="rotate(-220 60 60)"
-              style="transition: stroke-dashoffset 1s ease, stroke .4s"/>
+            <circle cx="60" cy="60" r="52" fill="none" id="speedArc" stroke="var(--green)" stroke-width="8" stroke-linecap="round" stroke-dasharray="326" stroke-dashoffset="110" transform="rotate(-220 60 60)" style="transition:stroke-dashoffset 1s ease,stroke .5s"/>
           </svg>
           <div class="speedo-val">
             <div class="speedo-num" id="speedNum">68</div>
@@ -688,62 +529,74 @@ body {
         </div>
 
         <div class="sensor-row">
-          <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--text-dim);letter-spacing:.15em;text-transform:uppercase;margin-bottom:4px">Capteurs</div>
-          <div class="sensor-item">
-            <span>Avant</span>
-            <div class="sensor-bar"><div class="sensor-fill" id="sensorFront" style="width:60%;background:var(--green)"></div></div>
-            <span id="sensorFrontVal">38m</span>
-          </div>
-          <div class="sensor-item">
-            <span>Arrière</span>
-            <div class="sensor-bar"><div class="sensor-fill" id="sensorRear" style="width:80%;background:var(--green)"></div></div>
-            <span>22m</span>
-          </div>
-          <div class="sensor-item">
-            <span>Gauche</span>
-            <div class="sensor-bar"><div class="sensor-fill" id="sensorLeft" style="width:40%;background:var(--green)"></div></div>
-            <span>libre</span>
-          </div>
-          <div class="sensor-item">
-            <span>Droite</span>
-            <div class="sensor-bar"><div class="sensor-fill" id="sensorRight" style="width:90%;background:var(--yellow)"></div></div>
-            <span>4m</span>
-          </div>
+          <div class="sensor-section-title">Sensors</div>
+          <div class="sensor-item"><span>Front</span><div class="sensor-bar"><div class="sensor-fill" id="sensorFront" style="width:60%;background:var(--green)"></div></div><span id="sensorFrontVal">38m</span></div>
+          <div class="sensor-item"><span>Rear</span><div class="sensor-bar"><div class="sensor-fill" id="sensorRear" style="width:80%;background:var(--green)"></div></div><span>22m</span></div>
+          <div class="sensor-item"><span>Left</span><div class="sensor-bar"><div class="sensor-fill" id="sensorLeft" style="width:40%;background:var(--green)"></div></div><span>clear</span></div>
+          <div class="sensor-item"><span>Right</span><div class="sensor-bar"><div class="sensor-fill" id="sensorRight" style="width:90%;background:var(--yellow)"></div></div><span>4m</span></div>
         </div>
 
         <div class="mini-map">
           <div class="map-grid"></div>
-          <div class="map-route-line"></div>
-          <div class="map-car"></div>
+          <div class="map-route-line" id="mapRouteLine"></div>
+          <div class="map-car" id="mapCar"></div>
+          <div class="map-hazard" id="mapHazard">⚠️</div>
         </div>
       </div>
 
       <!-- CENTER -->
       <div class="panel-center" id="panelCenter">
-        <!-- Road View -->
-        <div class="road-view">
-          <div class="road-surface"></div>
-          <div class="road-line"></div>
+        <div class="road-view" id="roadView">
+          <div class="road-surface" id="roadSurface"></div>
+          <div class="road-line" id="roadLine"></div>
+          <div class="road-snow" id="roadSnow"></div>
+          <!-- Mountain scene in road view (for snow scenario) -->
+          <svg class="road-mountains" id="roadMountains" viewBox="0 0 420 170" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+            <rect width="420" height="170" fill="#06101e"/>
+            <polygon points="0,120 70,50 140,90 210,20 280,80 350,40 420,70 420,170 0,170" fill="#0d1828"/>
+            <polygon points="210,20 190,50 230,50" fill="rgba(200,230,255,0.7)"/>
+            <polygon points="350,40 330,70 370,70" fill="rgba(200,230,255,0.6)"/>
+            <!-- road -->
+            <polygon points="140,170 175,80 245,80 280,170" fill="#101828"/>
+            <line x1="210" y1="170" x2="210" y2="90" stroke="#1e2e44" stroke-width="2" stroke-dasharray="12,10"/>
+            <!-- snow on road -->
+            <ellipse cx="210" cy="165" rx="80" ry="10" fill="#c0d8f0" opacity="0.15"/>
+          </svg>
+          <div class="avalanche-mass" id="avalancheMass"></div>
           <div class="other-car" id="otherCar" style="top:30px;left:50%;transform:translateX(-50%)">🚗</div>
           <div class="detection-ring" id="detectionRing" style="display:none"></div>
-          <div class="ego-car">🚙</div>
+          <div class="ego-car" id="egoCar">🚙</div>
+        </div>
+
+        <!-- Driver widget (medical) -->
+        <div class="driver-state-widget" id="driverStateWidget">
+          <div class="dsw-title">⚕ Physiological signals detected</div>
+          <div class="dsw-indicators">
+            <div class="dsw-ind"><div class="dsw-ind-val" id="dswHR" style="color:var(--orange)">48</div><div class="dsw-ind-label">BPM</div></div>
+            <div class="dsw-ind"><div class="dsw-ind-val" id="dswBlink" style="color:var(--red)">3</div><div class="dsw-ind-label">BLINK</div></div>
+            <div class="dsw-ind"><div class="dsw-ind-val" id="dswDrift" style="color:var(--red)">±6°</div><div class="dsw-ind-label">DRIFT</div></div>
+            <div class="dsw-ind"><div class="dsw-ind-val" id="dswReaction" style="color:var(--red)">—</div><div class="dsw-ind-label">REACT.</div></div>
+          </div>
         </div>
 
         <!-- AI Card -->
         <div class="ai-message-card" id="aiCard">
-          <div class="ai-badge">
-            <div class="ai-dot" id="aiDot"></div>
-            <span class="ai-label" id="aiLabel">IA · Suggestion</span>
-          </div>
-          <div class="ai-msg-text" id="aiMsg">Trafic fluide. Surveillance active.</div>
-          <div class="ai-confidence">
-            <span>Confiance</span>
-            <div class="conf-track"><div class="conf-fill" id="confFill" style="width:92%;background:var(--green)"></div></div>
-            <span id="confVal">92%</span>
+          <div class="ai-badge"><div class="ai-dot" id="aiDot"></div><span class="ai-label" id="aiLabel">AI · Advisory</span></div>
+          <div class="ai-msg-text" id="aiMsg">Traffic clear. Active monitoring.</div>
+          <div class="ai-confidence"><span>Confidence</span><div class="conf-track"><div class="conf-fill" id="confFill" style="width:92%;background:var(--green)"></div></div><span id="confVal">92%</span></div>
+        </div>
+
+        <!-- Countdown widget -->
+        <div class="countdown-widget" id="countdownWidget">
+          <div class="cdw-bg" id="cdwBg"></div>
+          <div class="cdw-inner">
+            <div class="cdw-header"><span class="cdw-label" id="cdwLabel">⏱ AI TAKEOVER IN</span></div>
+            <div class="cdw-number" id="cdwNumber">3</div>
+            <div class="cdw-track"><div class="cdw-fill" id="cdwFill" style="width:100%"></div></div>
+            <div class="cdw-msg" id="cdwMsg">No response detected · AI taking over</div>
           </div>
         </div>
 
-        <!-- Actions -->
         <div class="action-row" id="actionRow"></div>
         <div class="resp-toast" id="respToast"></div>
       </div>
@@ -751,476 +604,793 @@ body {
       <!-- RIGHT -->
       <div class="panel-right">
         <div class="info-block">
-          <div class="info-block-title">Autorité active</div>
-          <div class="info-val" id="authorityVal" style="color:var(--green)">Humain</div>
-          <div class="info-unit" id="authorityUnit">Conduite manuelle</div>
+          <div class="info-block-title">Active Authority</div>
+          <div class="info-val" id="authorityVal" style="color:var(--green)">Human</div>
+          <div class="info-unit" id="authorityUnit">Manual driving</div>
         </div>
         <div class="info-block">
-          <div class="info-block-title">Niveau d'alerte</div>
+          <div class="info-block-title">Alert Level</div>
           <div class="info-val" id="alertVal" style="color:var(--green)">NOMINAL</div>
-          <div class="info-unit" id="alertUnit">Aucun risque détecté</div>
+          <div class="info-unit" id="alertUnit">No risk detected</div>
         </div>
         <div class="event-log" id="eventLog">
-          <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.15em;color:var(--text-dim);text-transform:uppercase;margin-bottom:6px">Événements</div>
+          <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.15em;color:var(--text-dim);text-transform:uppercase;margin-bottom:5px">Events</div>
         </div>
       </div>
     </div>
 
     <!-- AUTHORITY BAR -->
     <div class="authority-bar">
-      <div class="auth-label">Humain</div>
+      <div class="auth-label">Human</div>
       <div class="auth-wrap">
-        <div class="auth-track">
-          <div class="auth-human" id="authHuman" style="width:80%"></div>
-          <div class="auth-ai" id="authAI" style="width:18%"></div>
-        </div>
-        <div class="auth-labels">
-          <span id="authHumanPct">80% Contrôle</span>
-          <span id="authAIPct">18% Assistance</span>
-        </div>
+        <div class="auth-track"><div class="auth-human" id="authHuman" style="width:80%"></div><div class="auth-ai" id="authAI" style="width:18%"></div></div>
+        <div class="auth-labels"><span id="authHumanPct">80% Control</span><span id="authAIPct">18% Assist</span></div>
       </div>
       <div class="auth-marker" id="authMarker" style="color:var(--green)">●</div>
-      <div class="auth-label">IA</div>
+      <div class="auth-label">AI</div>
     </div>
   </div>
 </div>
 
 <script>
+// ═══════════════════════════════════════════
+// SNOWFLAKE GENERATOR
+// ═══════════════════════════════════════════
+function createSnowflakes(count = 30) {
+  const layer = document.getElementById('snowLayer');
+  layer.innerHTML = '';
+  const chars = ['❄','·','*','❅','❆'];
+  for(let i = 0; i < count; i++) {
+    const el = document.createElement('div');
+    el.className = 'snowflake';
+    el.textContent = chars[Math.floor(Math.random() * chars.length)];
+    el.style.left = Math.random() * 100 + '%';
+    el.style.fontSize = (8 + Math.random() * 8) + 'px';
+    el.style.animationDuration = (4 + Math.random() * 6) + 's';
+    el.style.animationDelay = (-Math.random() * 8) + 's';
+    el.style.opacity = 0.3 + Math.random() * 0.5;
+    layer.appendChild(el);
+  }
+}
+
+// ═══════════════════════════════════════════
+// SCENARIO DATA
+// ═══════════════════════════════════════════
 const SCENARIOS = [
   {
-    id: 's1',
-    emoji: '🟢',
-    name: 'Situation Normale',
-    desc: 'Trafic fluide · IA suggère seulement',
-    color: 'var(--green)',
-    colorRaw: '#00e5a0',
-    status: 'NORMAL',
-    statusColor: 'var(--green)',
-    speed: 68,
-    alert: 'NOMINAL',
-    alertUnit: 'Aucun risque détecté',
-    alertColor: 'var(--green)',
-    authority: 'Humain',
-    authorityUnit: 'Conduite manuelle',
-    authorityColor: 'var(--green)',
-    authHuman: 82,
-    authAI: 16,
-    authMarker: '●',
-    aiLabel: 'IA · Suggestion',
-    aiLabelColor: 'var(--green)',
-    aiMsg: 'Véhicule légèrement plus lent détecté devant.\nAction suggérée : Changer vers voie gauche.',
-    confidence: 91,
-    confColor: 'var(--green)',
-    cardBorder: 'rgba(0,229,160,0.25)',
-    cardBg: 'rgba(0,229,160,0.04)',
-    otherCarPos: { top: '28px', left: '50%' },
-    detection: { color: 'var(--green)', size: 60, top: '42px', left: '50%' },
-    actions: [
-      { label: '✓ Accepter', type: 'primary', bg: 'var(--green)', response: { color: 'var(--green)', bg: 'rgba(0,229,160,.1)', msg: '✓ Manœuvre initiée · Changement voie gauche en cours.' }, log: { color: 'var(--green)', msg: 'Suggestion acceptée · Voie gauche' } },
-      { label: '✕ Ignorer', type: 'secondary', response: { color: 'var(--yellow)', bg: 'rgba(245,200,66,.1)', msg: '— Suggestion ignorée. Maintien de la voie actuelle.' }, log: { color: 'var(--yellow)', msg: 'Suggestion ignorée par conducteur' } },
+    id:'s1', emoji:'🟢', name:'Normal Situation', desc:'Smooth traffic · AI suggests only',
+    color:'var(--green)', colorRaw:'#00e5a0', status:'NORMAL', statusColor:'var(--green)',
+    speed:68, alert:'NOMINAL', alertUnit:'No risk detected', alertColor:'var(--green)',
+    authority:'Human', authorityUnit:'Manual driving', authorityColor:'var(--green)',
+    authHuman:82, authAI:16, authMarker:'●',
+    aiLabel:'AI · Suggestion', aiLabelColor:'var(--green)',
+    aiMsg:'Slightly slower vehicle detected ahead.\nSuggested action: Merge into left lane.',
+    confidence:91, confColor:'var(--green)', cardBorder:'rgba(0,229,160,0.25)', cardBg:'rgba(0,229,160,0.04)',
+    otherCarPos:{top:'28px',left:'50%'}, detection:{color:'var(--green)',size:60,top:'42px',left:'50%'},
+    actions:[
+      {label:'✓ Accept',type:'primary',bg:'var(--green)',response:{color:'var(--green)',bg:'rgba(0,229,160,.1)',msg:'✓ Manoeuvre initiated · Merging left.'},log:{color:'var(--green)',msg:'Suggestion accepted · left lane'}},
+      {label:'✕ Ignore',type:'secondary',response:{color:'var(--yellow)',bg:'rgba(245,200,66,.1)',msg:'— Suggestion ignored. Holding current lane.'},log:{color:'var(--yellow)',msg:'Suggestion ignored by driver'}},
     ],
-    sensorFront: { w: '60%', v: '38m', c: 'var(--green)' },
-    logs: ['14:23', '14:21', '14:19'],
-    logMsgs: ['Véhicule lent détecté', 'Route A1 — trafic normal', 'Système actif'],
-    emergency: false,
-    route: 'Genève → Lausanne · A1',
+    sensorFront:{w:'60%',v:'38m',c:'var(--green)'}, vitals:{hr:72,tension:'Normal',blink:18,drift:'±0.8°',state:'Alert',hrColor:'var(--green)',stateColor:'var(--green)'},
+    logs:['14:23','14:21','14:19'], logMsgs:['Slow vehicle detected','A1 road — normal traffic','System active'],
+    emergency:false, orange:false, medical:false, isEnv:false, route:'Geneva → Lausanne · A1',
   },
   {
-    id: 's2',
-    emoji: '🟡',
-    name: 'Situation à Risque',
-    desc: 'Freinage brusque · IA demande confirmation',
-    color: 'var(--yellow)',
-    colorRaw: '#f5c842',
-    status: 'ATTENTION',
-    statusColor: 'var(--yellow)',
-    speed: 52,
-    alert: 'RISQUE',
-    alertUnit: 'Freinage détecté devant',
-    alertColor: 'var(--yellow)',
-    authority: 'Humain',
-    authorityUnit: 'Assistance renforcée',
-    authorityColor: 'var(--yellow)',
-    authHuman: 65,
-    authAI: 33,
-    authMarker: '◆',
-    aiLabel: 'IA · Confirmation requise',
-    aiLabelColor: 'var(--yellow)',
-    aiMsg: '⚠ Risque détecté — freinage brusque devant.\nRecommandé : Ralentir & augmenter la distance.',
-    confidence: 87,
-    confColor: 'var(--yellow)',
-    cardBorder: 'rgba(245,200,66,0.35)',
-    cardBg: 'rgba(245,200,66,0.06)',
-    otherCarPos: { top: '14px', left: '50%' },
-    detection: { color: 'var(--yellow)', size: 80, top: '36px', left: '50%' },
-    actions: [
-      { label: '✓ Appliquer', type: 'primary', bg: 'var(--yellow)', response: { color: 'var(--yellow)', bg: 'rgba(245,200,66,.12)', msg: '✓ Décélération engagée · Distance sécurité maintenue.' }, log: { color: 'var(--yellow)', msg: 'Freinage appliqué par conducteur' } },
-      { label: '✕ Refuser', type: 'secondary', response: { color: 'var(--red)', bg: 'rgba(255,61,90,.1)', msg: '⚠ Refus enregistré. Surveillance accrue activée.' }, log: { color: 'var(--red)', msg: 'Action refusée · surveillance max' } },
+    id:'s2', emoji:'🟡', name:'Risky Situation', desc:'Sudden braking · AI requests confirmation',
+    color:'var(--yellow)', colorRaw:'#f5c842', status:'CAUTION', statusColor:'var(--yellow)',
+    speed:52, alert:'RISK', alertUnit:'Braking detected ahead', alertColor:'var(--yellow)',
+    authority:'Human', authorityUnit:'Enhanced assistance', authorityColor:'var(--yellow)',
+    authHuman:65, authAI:33, authMarker:'◆',
+    aiLabel:'AI · Confirmation Required', aiLabelColor:'var(--yellow)',
+    aiMsg:'⚠ Risk detected — sudden braking ahead.\nRecommended: Slow down & increase following distance.',
+    confidence:87, confColor:'var(--yellow)', cardBorder:'rgba(245,200,66,0.35)', cardBg:'rgba(245,200,66,0.06)',
+    otherCarPos:{top:'14px',left:'50%'}, detection:{color:'var(--yellow)',size:80,top:'36px',left:'50%'},
+    actions:[
+      {label:'✓ Apply',type:'primary',bg:'var(--yellow)',response:{color:'var(--yellow)',bg:'rgba(245,200,66,.12)',msg:'✓ Deceleration engaged · Safety distance maintained.'},log:{color:'var(--yellow)',msg:'Braking applied by driver'}},
+      {label:'✕ Override',type:'secondary',response:{color:'var(--red)',bg:'rgba(255,61,90,.1)',msg:'⚠ Override logged. Enhanced monitoring active.'},log:{color:'var(--red)',msg:'Action refused · max monitoring'}},
     ],
-    sensorFront: { w: '25%', v: '12m', c: 'var(--yellow)' },
-    logs: ['14:31', '14:30', '14:29'],
-    logMsgs: ['Freinage brusque: véhicule n°2', 'Densité trafic ↑', 'Alerte risque générée'],
-    emergency: false,
-    route: 'Genève → Lausanne · A1',
+    sensorFront:{w:'25%',v:'12m',c:'var(--yellow)'}, vitals:{hr:78,tension:'High',blink:14,drift:'±2.1°',state:'Alert',hrColor:'var(--yellow)',stateColor:'var(--yellow)'},
+    logs:['14:31','14:30','14:29'], logMsgs:['Sudden braking: vehicle #2','Traffic density ↑','Risk alert generated'],
+    emergency:false, orange:false, medical:false, isEnv:false, route:'Geneva → Lausanne · A1',
   },
   {
-    id: 's3',
-    emoji: '🔴',
-    name: 'Urgence Critique',
-    desc: 'Conducteur ne réagit pas · IA prend le contrôle',
-    color: 'var(--red)',
-    colorRaw: '#ff3d5a',
-    status: 'URGENCE',
-    statusColor: 'var(--red)',
-    speed: 31,
-    alert: 'CRITIQUE',
-    alertUnit: 'Freinage d\'urgence activé',
-    alertColor: 'var(--red)',
-    authority: 'IA',
-    authorityUnit: 'Contrôle d\'urgence',
-    authorityColor: 'var(--red)',
-    authHuman: 10,
-    authAI: 88,
-    authMarker: '▲',
-    aiLabel: 'IA · Contrôle actif',
-    aiLabelColor: 'var(--red)',
-    aiMsg: '🚨 Freinage d\'urgence activé.\nMaintien de la stabilité latérale.\nContrôle restitué après stabilisation.',
-    confidence: 99,
-    confColor: 'var(--red)',
-    cardBorder: 'rgba(255,61,90,0.4)',
-    cardBg: 'rgba(255,61,90,0.08)',
-    otherCarPos: { top: '4px', left: '50%' },
-    detection: { color: 'var(--red)', size: 100, top: '26px', left: '50%' },
-    actions: [
-      { label: '↩ Reprendre contrôle', type: 'primary', bg: 'var(--red)', response: { color: 'var(--green)', bg: 'rgba(0,229,160,.1)', msg: '✓ Contrôle restitué. Situation stabilisée. Bon voyage.' }, log: { color: 'var(--green)', msg: 'Contrôle repris par conducteur' } },
-    ],
-    sensorFront: { w: '5%', v: '3m', c: 'var(--red)' },
-    logs: ['14:44', '14:44', '14:43'],
-    logMsgs: ['🚨 Urgence — IA en contrôle', 'Conducteur non-réactif 3.2s', 'Collision imminente détectée'],
-    emergency: true,
-    route: 'Genève → Lausanne · A1',
+    id:'s3', emoji:'🔴', name:'Critical Emergency', desc:'Driver unresponsive · AI takes control',
+    color:'var(--red)', colorRaw:'#ff3d5a', status:'EMERGENCY', statusColor:'var(--red)',
+    speed:31, alert:'CRITICAL', alertUnit:'Emergency braking active', alertColor:'var(--red)',
+    authority:'AI', authorityUnit:'Emergency control', authorityColor:'var(--red)',
+    authHuman:10, authAI:88, authMarker:'▲',
+    aiLabel:'AI · Active Control', aiLabelColor:'var(--red)',
+    aiMsg:'🚨 Emergency braking activated.\nLateral stability maintained.\nControl returned after stabilisation.',
+    confidence:99, confColor:'var(--red)', cardBorder:'rgba(255,61,90,0.4)', cardBg:'rgba(255,61,90,0.08)',
+    otherCarPos:{top:'4px',left:'50%'}, detection:{color:'var(--red)',size:100,top:'26px',left:'50%'},
+    actions:[{label:'↩ Resume control',type:'primary',bg:'var(--red)',response:{color:'var(--green)',bg:'rgba(0,229,160,.1)',msg:'✓ Control restored. Situation stabilised.'},log:{color:'var(--green)',msg:'Control resumed by driver'}}],
+    sensorFront:{w:'5%',v:'3m',c:'var(--red)'}, vitals:{hr:95,tension:'Critical',blink:22,drift:'±8°',state:'Max Alert',hrColor:'var(--red)',stateColor:'var(--red)'},
+    logs:['14:44','14:44','14:43'], logMsgs:['🚨 Emergency — AI in control','Driver unresponsive 3.2s','Imminent collision detected'],
+    emergency:true, orange:false, medical:false, isEnv:false, route:'Geneva → Lausanne · A1',
   },
   {
-    id: 's4',
-    emoji: '🔵',
-    name: 'Récupération',
-    desc: 'Situation stabilisée · Retour au conducteur',
-    color: 'var(--blue)',
-    colorRaw: '#4db8ff',
-    status: 'STABLE',
-    statusColor: 'var(--blue)',
-    speed: 45,
-    alert: 'STABLE',
-    alertUnit: 'Risque écarté',
-    alertColor: 'var(--blue)',
-    authority: 'Transition',
-    authorityUnit: 'Re-synchronisation',
-    authorityColor: 'var(--blue)',
-    authHuman: 55,
-    authAI: 43,
-    authMarker: '⟳',
-    aiLabel: 'IA · Récupération',
-    aiLabelColor: 'var(--blue)',
-    aiMsg: 'Situation stabilisée.\nVous pouvez reprendre le contrôle manuel.\nRésumé de l\'incident disponible.',
-    confidence: 96,
-    confColor: 'var(--blue)',
-    cardBorder: 'rgba(77,184,255,0.3)',
-    cardBg: 'rgba(77,184,255,0.05)',
-    otherCarPos: { top: '50px', left: '50%' },
-    detection: { color: 'var(--blue)', size: 50, top: '62px', left: '50%' },
-    actions: [
-      { label: '✓ Reprendre', type: 'primary', bg: 'var(--blue)', response: { color: 'var(--green)', bg: 'rgba(0,229,160,.1)', msg: '✓ Contrôle manuel actif. Bienvenue de retour.' }, log: { color: 'var(--blue)', msg: 'Reprise manuelle confirmée' } },
-      { label: '📋 Voir résumé', type: 'secondary', response: { color: 'var(--blue)', bg: 'rgba(77,184,255,.1)', msg: '📋 Freinage auto à 14:44 · Durée: 4.2s · Distance évitée: 2.8m' }, log: { color: 'var(--blue)', msg: 'Résumé incident consulté' } },
+    id:'s4', emoji:'🔵', name:'Recovery', desc:'Situation stabilised · Handback to driver',
+    color:'var(--blue)', colorRaw:'#4db8ff', status:'STABLE', statusColor:'var(--blue)',
+    speed:45, alert:'STABLE', alertUnit:'Risk cleared', alertColor:'var(--blue)',
+    authority:'Transition', authorityUnit:'Re-synchronisation', authorityColor:'var(--blue)',
+    authHuman:55, authAI:43, authMarker:'⟳',
+    aiLabel:'AI · Recovery', aiLabelColor:'var(--blue)',
+    aiMsg:'Situation stabilised.\nYou may resume manual control.\nIncident summary available.',
+    confidence:96, confColor:'var(--blue)', cardBorder:'rgba(77,184,255,0.3)', cardBg:'rgba(77,184,255,0.05)',
+    otherCarPos:{top:'50px',left:'50%'}, detection:{color:'var(--blue)',size:50,top:'62px',left:'50%'},
+    actions:[
+      {label:'✓ Resume',type:'primary',bg:'var(--blue)',response:{color:'var(--green)',bg:'rgba(0,229,160,.1)',msg:'✓ Manual control active. Welcome back.'},log:{color:'var(--blue)',msg:'Manual resume confirmed'}},
+      {label:'📋 View summary',type:'secondary',response:{color:'var(--blue)',bg:'rgba(77,184,255,.1)',msg:'📋 Auto-brake at 14:44 · Duration: 4.2s · Avoided distance: 2.8m'},log:{color:'var(--blue)',msg:'Incident summary viewed'}},
     ],
-    sensorFront: { w: '70%', v: '44m', c: 'var(--blue)' },
-    logs: ['14:45', '14:44', '14:44'],
-    logMsgs: ['Stabilisation complète', 'Contrôle en transition', '🚨 Urgence résolue'],
-    emergency: false,
-    route: 'Genève → Lausanne · A1',
+    sensorFront:{w:'70%',v:'44m',c:'var(--blue)'}, vitals:{hr:82,tension:'Normal',blink:16,drift:'±1.2°',state:'Alert',hrColor:'var(--blue)',stateColor:'var(--blue)'},
+    logs:['14:45','14:44','14:44'], logMsgs:['Stabilisation complete','Control in transition','🚨 Emergency resolved'],
+    emergency:false, orange:false, medical:false, isEnv:false, route:'Geneva → Lausanne · A1',
   },
   {
-    id: 's5',
-    emoji: '⚖️',
-    name: 'Dilemme Éthique',
-    desc: 'IA révèle un biais · Conducteur décide',
-    color: 'var(--purple)',
-    colorRaw: '#b87aff',
-    status: 'DÉCISION',
-    statusColor: 'var(--purple)',
-    speed: 40,
-    alert: 'BIAIS DÉTECTÉ',
-    alertUnit: 'Données historiques biaisées',
-    alertColor: 'var(--purple)',
-    authority: 'Humain',
-    authorityUnit: 'Décision éthique requise',
-    authorityColor: 'var(--purple)',
-    authHuman: 78,
-    authAI: 20,
-    authMarker: '◉',
-    aiLabel: 'IA · Avertissement biais',
-    aiLabelColor: 'var(--purple)',
-    aiMsg: '⚠ Biais potentiel détecté.\nCet itinéraire évite le District 7 basé sur données historiques pouvant refléter des inégalités socio-économiques.\nVotre décision ?',
-    confidence: 54,
-    confColor: 'var(--purple)',
-    cardBorder: 'rgba(184,122,255,0.3)',
-    cardBg: 'rgba(184,122,255,0.05)',
-    otherCarPos: { top: '60px', left: '60%' },
-    detection: { color: 'var(--purple)', size: 55, top: '72px', left: '62%' },
-    actions: [
-      { label: '↩ Garder la route', type: 'secondary', response: { color: 'var(--purple)', bg: 'rgba(184,122,255,.1)', msg: '— Route maintenue. Biais signalé pour révision système.' }, log: { color: 'var(--purple)', msg: 'Route maintenue (biais signalé)' } },
-      { label: '↪ Passer par D7', type: 'primary', bg: 'var(--purple)', response: { color: 'var(--green)', bg: 'rgba(0,229,160,.1)', msg: '✓ Route mise à jour. Votre correction améliore le modèle.' }, log: { color: 'var(--green)', msg: 'Biais corrigé par conducteur' } },
+    id:'s5', emoji:'⚖️', name:'Ethical Dilemma', desc:'AI reveals bias · Driver decides',
+    color:'var(--purple)', colorRaw:'#b87aff', status:'DECISION', statusColor:'var(--purple)',
+    speed:40, alert:'BIAS DETECTED', alertUnit:'Historical data bias', alertColor:'var(--purple)',
+    authority:'Human', authorityUnit:'Ethical decision required', authorityColor:'var(--purple)',
+    authHuman:78, authAI:20, authMarker:'◉',
+    aiLabel:'AI · Bias Warning', aiLabelColor:'var(--purple)',
+    aiMsg:'⚠ Potential bias detected.\nThis route avoids District 7 based on historical data that may reflect socioeconomic inequalities.\nYour decision?',
+    confidence:54, confColor:'var(--purple)', cardBorder:'rgba(184,122,255,0.3)', cardBg:'rgba(184,122,255,0.05)',
+    otherCarPos:{top:'60px',left:'60%'}, detection:{color:'var(--purple)',size:55,top:'72px',left:'62%'},
+    actions:[
+      {label:'↩ Keep route',type:'secondary',response:{color:'var(--purple)',bg:'rgba(184,122,255,.1)',msg:'— Route maintained. Bias flagged for system review.'},log:{color:'var(--purple)',msg:'Route kept (bias flagged)'}},
+      {label:'↪ Go through D7',type:'primary',bg:'var(--purple)',response:{color:'var(--green)',bg:'rgba(0,229,160,.1)',msg:'✓ Route updated. Your correction improves the model.'},log:{color:'var(--green)',msg:'Bias corrected by driver'}},
     ],
-    sensorFront: { w: '75%', v: '48m', c: 'var(--green)' },
-    logs: ['15:02', '15:01', '15:00'],
-    logMsgs: ['Biais données: District 7', 'Confiance IA: réduite à 54%', 'Décision humaine requise'],
-    emergency: false,
-    route: 'Genève Centre → Aéroport',
+    sensorFront:{w:'75%',v:'48m',c:'var(--green)'}, vitals:{hr:72,tension:'Normal',blink:18,drift:'±0.9°',state:'Alert',hrColor:'var(--green)',stateColor:'var(--green)'},
+    logs:['15:02','15:01','15:00'], logMsgs:['Data bias: District 7','AI confidence reduced to 54%','Human decision required'],
+    emergency:false, orange:false, medical:false, isEnv:false, route:'Geneva Centre → Airport',
   },
   {
-    id: 's6',
-    emoji: '🌐',
-    name: 'Intelligence Collective',
-    desc: 'Nid-de-poule signalé par 6 véhicules',
-    color: 'var(--blue)',
-    colorRaw: '#4db8ff',
-    status: 'RÉSEAU',
-    statusColor: 'var(--blue)',
-    speed: 61,
-    alert: 'COLLECTIF',
-    alertUnit: 'Signal réseau reçu',
-    alertColor: 'var(--blue)',
-    authority: 'Humain',
-    authorityUnit: 'Info réseau partagée',
-    authorityColor: 'var(--blue)',
-    authHuman: 80,
-    authAI: 18,
-    authMarker: '●',
-    aiLabel: 'IA · Réseau Collectif',
-    aiLabelColor: 'var(--blue)',
-    aiMsg: '🌐 6 véhicules ont signalé un nid-de-poule au km 14.2 il y a 8 min.\nNon confirmé officiellement — ralentissement préventif.',
-    confidence: 71,
-    confColor: 'var(--blue)',
-    cardBorder: 'rgba(77,184,255,0.3)',
-    cardBg: 'rgba(77,184,255,0.05)',
-    otherCarPos: { top: '35px', left: '50%' },
-    detection: { color: 'var(--blue)', size: 65, top: '48px', left: '50%' },
-    actions: [
-      { label: '✓ Confirmer danger', type: 'primary', bg: 'var(--blue)', response: { color: 'var(--blue)', bg: 'rgba(77,184,255,.1)', msg: '✓ Signalement partagé anonymement. 847 conducteurs alertés.' }, log: { color: 'var(--blue)', msg: 'Danger confirmé · réseau mis à jour' } },
-      { label: '✕ Rien trouvé', type: 'secondary', response: { color: 'var(--green)', bg: 'rgba(0,229,160,.1)', msg: '— Contre-signal envoyé. Confiance collective ajustée.' }, log: { color: 'var(--yellow)', msg: 'Contre-signal · confiance ajustée' } },
+    id:'s6', emoji:'🌐', name:'Collective Intelligence', desc:'Pothole reported by 6 vehicles',
+    color:'var(--blue)', colorRaw:'#4db8ff', status:'NETWORK', statusColor:'var(--blue)',
+    speed:61, alert:'COLLECTIVE', alertUnit:'Network signal received', alertColor:'var(--blue)',
+    authority:'Human', authorityUnit:'Shared network info', authorityColor:'var(--blue)',
+    authHuman:80, authAI:18, authMarker:'●',
+    aiLabel:'AI · Collective Network', aiLabelColor:'var(--blue)',
+    aiMsg:'🌐 6 vehicles reported a pothole at km 14.2, 8 min ago.\nNot officially confirmed — precautionary slow-down.',
+    confidence:71, confColor:'var(--blue)', cardBorder:'rgba(77,184,255,0.3)', cardBg:'rgba(77,184,255,0.05)',
+    otherCarPos:{top:'35px',left:'50%'}, detection:{color:'var(--blue)',size:65,top:'48px',left:'50%'},
+    actions:[
+      {label:'✓ Confirm hazard',type:'primary',bg:'var(--blue)',response:{color:'var(--blue)',bg:'rgba(77,184,255,.1)',msg:'✓ Report shared anonymously. 847 drivers alerted.'},log:{color:'var(--blue)',msg:'Hazard confirmed · network updated'}},
+      {label:'✕ Nothing found',type:'secondary',response:{color:'var(--green)',bg:'rgba(0,229,160,.1)',msg:'— Counter-report sent. Network confidence adjusted.'},log:{color:'var(--yellow)',msg:'Counter-report · confidence adjusted'}},
     ],
-    sensorFront: { w: '55%', v: '34m', c: 'var(--green)' },
-    logs: ['15:14', '15:13', '15:12'],
-    logMsgs: ['Réseau: 6 signalements km14', 'Carte officielle: aucun incident', 'Ralentissement préventif -7km/h'],
-    emergency: false,
-    route: 'Lausanne → Montreux · A9',
+    sensorFront:{w:'55%',v:'34m',c:'var(--green)'}, vitals:{hr:70,tension:'Normal',blink:17,drift:'±1.0°',state:'Alert',hrColor:'var(--green)',stateColor:'var(--green)'},
+    logs:['15:14','15:13','15:12'], logMsgs:['Network: 6 reports km14','Official map: no incident','Precautionary -7km/h'],
+    emergency:false, orange:false, medical:false, isEnv:false, route:'Lausanne → Montreux · A9',
+  },
+  {
+    id:'s7', emoji:'🫀', name:'Driver Medical Event', desc:'Physiological detection · Emergency medical protocol',
+    color:'var(--orange)', colorRaw:'#ff8c42', status:'MEDICAL', statusColor:'var(--orange)',
+    speed:68, alert:'MEDICAL', alertUnit:'Critical signals detected', alertColor:'var(--orange)',
+    authority:'AI (Emergency)', authorityUnit:'Medical protocol active', authorityColor:'var(--orange)',
+    authHuman:15, authAI:83, authMarker:'⚕',
+    aiLabel:'AI · Medical Detection', aiLabelColor:'var(--orange)',
+    aiMsg:'⚕ Abnormal physiological signals detected.\nHeart rate ↓ · Blink rate reduced · Steering drift ↑\n\nMr. Dupont, are you fit to drive?',
+    confidence:88, confColor:'var(--orange)', cardBorder:'rgba(255,140,66,0.4)', cardBg:'rgba(255,140,66,0.07)',
+    otherCarPos:{top:'35px',left:'50%'}, detection:{color:'var(--orange)',size:70,top:'48px',left:'50%'},
+    actions:[],
+    sensorFront:{w:'58%',v:'36m',c:'var(--green)'},
+    vitals:{hr:48,tension:'Low',blink:3,drift:'±6°',state:'CRITICAL',hrColor:'var(--red)',stateColor:'var(--red)'},
+    logs:['16:02','16:01','16:00'], logMsgs:['⚕ BPM: 48 — critical threshold','Blink: 3/min (normal: 15-20)','Lateral drift detected'],
+    emergency:false, orange:true, medical:true, isEnv:false, route:'Geneva → Lausanne · A1',
+    isMedical:true,
+  },
+  // ════ NEW: EXTREME ENVIRONMENT SCENARIO ════
+  {
+    id:'s8', emoji:'🏔', name:'Alpine Avalanche Risk', desc:'Extreme weather · Human↔AI teaming in 4 steps',
+    color:'var(--ice)', colorRaw:'#a8d8f0', status:'MONITORING', statusColor:'var(--ice)',
+    speed:54, alert:'WEATHER', alertUnit:'Mountain hazard protocol', alertColor:'var(--ice)',
+    authority:'Human', authorityUnit:'AI advisory active', authorityColor:'var(--ice)',
+    authHuman:75, authAI:23, authMarker:'⛰',
+    aiLabel:'AI · Environment Monitor', aiLabelColor:'var(--ice)',
+    aiMsg:'⛰ Mountain sector detected.\nActivating alpine monitoring protocol.\nLoading weather & terrain data...',
+    confidence:94, confColor:'var(--ice)', cardBorder:'rgba(168,216,240,0.3)', cardBg:'rgba(168,216,240,0.05)',
+    otherCarPos:{top:'40px',left:'50%'}, detection:{color:'var(--ice)',size:65,top:'52px',left:'50%'},
+    actions:[],
+    sensorFront:{w:'65%',v:'41m',c:'var(--ice)'},
+    vitals:{hr:74,tension:'Normal',blink:17,drift:'±1.1°',state:'Alert',hrColor:'var(--green)',stateColor:'var(--green)'},
+    logs:['07:41','07:40','07:39'], logMsgs:['Alpine sector: Col du Grand-St-Bernard','Weather API: storm incoming','Avalanche risk index: 3/5'],
+    emergency:false, orange:false, medical:false, isEnv:true, route:"Col du Grand-St-Bernard · 2473m",
+    isMedical:false, isEnvironmental:true,
+    envStep:0,
+  },
+];
+
+// ═══════════════════════════════════════════
+// ENV SCENARIO STEPS
+// ═══════════════════════════════════════════
+const ENV_STEPS = [
+  {
+    // STEP 1 — Early detection, AI monitors, human drives
+    step:0, label:'Step 1 · Early Detection',
+    color:'var(--ice)', colorRaw:'#a8d8f0', status:'MONITORING', statusColor:'var(--ice)',
+    speed:54, authHuman:75, authAI:23, authMarker:'⛰',
+    aiLabel:'AI · Environment Monitor', aiLabelColor:'var(--ice)',
+    aiMsg:'⛰ Alpine sector — active monitoring.\nTemperature: -8°C · Visibility: 420m · Wind: 62 km/h\n\nAvalanche risk index: MODERATE (3/5)\nSuggested: Reduce speed to 40 km/h as precaution.',
+    confidence:82,
+    authority:'Human', authorityUnit:'AI advisory active', authorityColor:'var(--ice)',
+    alert:'WEATHER', alertUnit:'Monitoring — moderate risk', alertColor:'var(--ice)',
+    cardBorder:'rgba(168,216,240,0.3)', cardBg:'rgba(168,216,240,0.05)',
+    wxTemp:'-8°C', wxVis:'420m', wxWind:'62 km/h', wxRoad:'ICY', wxAvalanche:'MODERATE',
+    wxTempColor:'var(--ice)', wxVisColor:'var(--ice)', wxWindColor:'var(--yellow)', wxRoadColor:'var(--yellow)', wxAvColor:'var(--yellow)',
+    wxAlert:false,
+    snowIntensity:'light',
+    sensorFront:{w:'65%',v:'41m',c:'var(--ice)'},
+    actions:[
+      {label:'✓ Reduce to 40',type:'primary',bg:'var(--ice)',response:{color:'var(--ice)',bg:'rgba(168,216,240,.1)',msg:'✓ Speed limited to 40 km/h. Alpine protocol engaged.'},log:{color:'var(--ice)',msg:'Speed reduced by driver'}},
+      {label:'Continue at pace',type:'secondary',response:{color:'var(--yellow)',bg:'rgba(245,200,66,.1)',msg:'⚠ Noted. Increasing monitoring frequency.'},log:{color:'var(--yellow)',msg:'Driver continues — enhanced monitoring'}},
+    ],
+    logMsgs:['AI: Moderate risk detected','Driver alerted, decision pending','Weather: storm approaching'],
+    snowOverlayClass:'warn', emergencyOverlay:false,
+    roadStyle:'snowy',
+  },
+  {
+    // STEP 2 — Risk escalates, AI asks for confirmation
+    step:1, label:'Step 2 · Collaborative Action',
+    color:'var(--yellow)', colorRaw:'#f5c842', status:'ALERT', statusColor:'var(--yellow)',
+    speed:38, authHuman:58, authAI:40, authMarker:'◆',
+    aiLabel:'AI · Confirmation Required', aiLabelColor:'var(--yellow)',
+    aiMsg:'⚠ Conditions deteriorating rapidly.\nVisibility dropped to 90m · Wind: 94 km/h\nAvalanche risk: HIGH (4/5) — fresh seismic tremor detected.\n\nRecommended: Stop at next refuge (1.2 km)',
+    confidence:91,
+    authority:'Human', authorityUnit:'Shared decision', authorityColor:'var(--yellow)',
+    alert:'HIGH RISK', alertUnit:'Avalanche risk elevated', alertColor:'var(--yellow)',
+    cardBorder:'rgba(245,200,66,0.35)', cardBg:'rgba(245,200,66,0.07)',
+    wxTemp:'-14°C', wxVis:'90m', wxWind:'94 km/h', wxRoad:'BLACK ICE', wxAvalanche:'HIGH',
+    wxTempColor:'var(--red)', wxVisColor:'var(--red)', wxWindColor:'var(--red)', wxRoadColor:'var(--red)', wxAvColor:'var(--yellow)',
+    wxAlert:false,
+    snowIntensity:'heavy',
+    sensorFront:{w:'35%',v:'22m',c:'var(--yellow)'},
+    actions:[
+      {label:'✓ Stop at refuge',type:'primary',bg:'var(--yellow)',response:{color:'var(--green)',bg:'rgba(0,229,160,.1)',msg:'✓ Route to refuge updated. 1.2 km · ETA: 3 min. Excellent decision.'},log:{color:'var(--green)',msg:'Driver confirmed refuge stop'}},
+      {label:'⚠ Continue driving',type:'secondary',response:{color:'var(--red)',bg:'rgba(255,61,90,.1)',msg:'⚠ Continued. AI monitoring at maximum. Ready to intervene.'},log:{color:'var(--yellow)',msg:'Driver continues — AI on standby'}},
+    ],
+    logMsgs:['Seismic tremor: 0.4 magnitude','Visibility: 420m → 90m in 8 min','AI: STOP recommended'],
+    snowOverlayClass:'warn', emergencyOverlay:false,
+    roadStyle:'blizzard',
+  },
+  {
+    // STEP 3 — Avalanche detected, AI takes immediate control
+    step:2, label:'Step 3 · AI Takes Control',
+    color:'var(--red)', colorRaw:'#ff3d5a', status:'🚨 AVALANCHE', statusColor:'var(--red)',
+    speed:18, authHuman:5, authAI:93, authMarker:'▲',
+    aiLabel:'AI · Emergency Takeover', aiLabelColor:'var(--red)',
+    aiMsg:'🚨 AVALANCHE DETECTED — RIGHT SLOPE\nDistance: 280m · Speed: 180 km/h\n\nAI has taken full control.\nEmergency acceleration → left tunnel shelter.\nDo NOT touch the wheel.',
+    confidence:99,
+    authority:'AI', authorityUnit:'Full emergency control', authorityColor:'var(--red)',
+    alert:'AVALANCHE', alertUnit:'AI manoeuvring to shelter', alertColor:'var(--red)',
+    cardBorder:'rgba(255,61,90,0.5)', cardBg:'rgba(255,61,90,0.1)',
+    wxTemp:'-14°C', wxVis:'30m', wxWind:'122 km/h', wxRoad:'BLOCKED', wxAvalanche:'CRITICAL',
+    wxTempColor:'var(--red)', wxVisColor:'var(--red)', wxWindColor:'var(--red)', wxRoadColor:'var(--red)', wxAvColor:'var(--red)',
+    wxAlert:true,
+    snowIntensity:'blizzard',
+    sensorFront:{w:'8%',v:'5m',c:'var(--red)'},
+    actions:[
+      {label:'↩ Override AI',type:'secondary',response:{color:'var(--red)',bg:'rgba(255,61,90,.1)',msg:'⚠ Override logged but REFUSED — imminent lethal risk. AI maintains control.'},log:{color:'var(--red)',msg:'Override refused — life-critical manoeuvre'}},
+    ],
+    logMsgs:['🚨 Avalanche: slope R · 280m','AI takeover: T+0.0s','Steering toward Col tunnel'],
+    snowOverlayClass:'critical', emergencyOverlay:true,
+    roadStyle:'avalanche', showAvalanche:true,
+  },
+  {
+    // STEP 4 — Safe, handback to driver with debrief
+    step:3, label:'Step 4 · Recovery & Handback',
+    color:'var(--green)', colorRaw:'#00e5a0', status:'SAFE', statusColor:'var(--green)',
+    speed:0, authHuman:60, authAI:38, authMarker:'⟳',
+    aiLabel:'AI · Recovery', aiLabelColor:'var(--green)',
+    aiMsg:'✓ Vehicle secured in tunnel shelter.\nAvalanche passed — road blocked behind you.\nYou may resume control when ready.\n\nAI incident report available.',
+    confidence:97,
+    authority:'Transition', authorityUnit:'Handback to driver', authorityColor:'var(--green)',
+    alert:'SAFE', alertUnit:'Tunnel shelter reached', alertColor:'var(--green)',
+    cardBorder:'rgba(0,229,160,0.3)', cardBg:'rgba(0,229,160,0.05)',
+    wxTemp:'-14°C', wxVis:'Tunnel', wxWind:'—', wxRoad:'SAFE', wxAvalanche:'PASSED',
+    wxTempColor:'var(--text-mid)', wxVisColor:'var(--green)', wxWindColor:'var(--text-mid)', wxRoadColor:'var(--green)', wxAvColor:'var(--green)',
+    wxAlert:false,
+    snowIntensity:'none',
+    sensorFront:{w:'80%',v:'shelter',c:'var(--green)'},
+    actions:[
+      {label:'✓ Resume control',type:'primary',bg:'var(--green)',response:{color:'var(--green)',bg:'rgba(0,229,160,.1)',msg:'✓ Manual control restored. AI maintained shelter position for 4m12s. Well done team.'},log:{color:'var(--green)',msg:'Human control restored — safe'}},
+      {label:'📋 Incident report',type:'secondary',response:{color:'var(--blue)',bg:'rgba(77,184,255,.1)',msg:'📋 AI intervened at T+0s · Manoeuvre: 180° into tunnel · Duration: 4.2s · Outcome: No injuries.'},log:{color:'var(--blue)',msg:'Incident report consulted'}},
+    ],
+    logMsgs:['✓ Tunnel reached — vehicle safe','Avalanche: road blocked R12','AI active for 4min 12sec'],
+    snowOverlayClass:'', emergencyOverlay:false,
+    roadStyle:'tunnel',
   },
 ];
 
 let currentScenario = 0;
-let logItems = [];
+let countdownInterval = null;
+let envStep = 0;
 
-function pad(n) { return String(n).padStart(2, '0'); }
-function getTime() {
-  const n = new Date();
-  return `${pad(n.getHours())}:${pad(n.getMinutes())}`;
+function pad(n){ return String(n).padStart(2,'0'); }
+function getTime(){ const n=new Date(); return `${pad(n.getHours())}:${pad(n.getMinutes())}`; }
+
+function addLog(color, msg){
+  const log=document.getElementById('eventLog');
+  const item=document.createElement('div');
+  item.className='log-item';
+  item.innerHTML=`<div class="log-dot" style="background:${color}"></div><span class="log-time">${getTime()}</span><span class="log-msg">${msg}</span>`;
+  const title=log.querySelector('div:not(.log-item)');
+  log.insertBefore(item, title?title.nextSibling:log.firstChild);
+  log.querySelectorAll('.log-item').forEach((el,i)=>{ if(i>5) el.remove(); });
 }
 
-function buildScenarioBar() {
-  const bar = document.getElementById('scenarioBar');
-  bar.innerHTML = SCENARIOS.map((s, i) => `
-    <button class="sc-btn ${i === currentScenario ? 'active' : ''}"
-      id="sc-btn-${i}"
-      style="${i === currentScenario ? `background:${s.color};color:var(--bg);border-color:${s.color}` : ''}"
+function updateVitals(v){
+  document.getElementById('vitalHR').innerHTML=`${v.hr} <span style="font-size:9px;opacity:.5">bpm</span>`;
+  document.getElementById('vitalHR').style.color=v.hrColor;
+  document.getElementById('vitalTension').textContent=v.tension;
+  document.getElementById('vitalTension').style.color=v.hrColor;
+  document.getElementById('vitalBlink').textContent=v.blink;
+  document.getElementById('vitalBlink').style.color=v.hrColor;
+  document.getElementById('vitalDrift').textContent=v.drift;
+  document.getElementById('vitalDrift').style.color=v.stateColor;
+  document.getElementById('vitalState').textContent=v.state;
+  document.getElementById('vitalState').style.color=v.stateColor;
+  document.getElementById('ekgLine').style.stroke=v.hrColor;
+}
+
+function buildScenarioBar(){
+  document.getElementById('scenarioBar').innerHTML=SCENARIOS.map((s,i)=>`
+    <button class="sc-btn ${i===currentScenario?'active':''}"
+      style="${i===currentScenario?`background:${s.color};color:var(--bg);border-color:${s.color}`:''}"
       onclick="switchScenario(${i})">
       ${s.emoji} <span class="sc-num">${pad(i+1)}</span> ${s.name}
     </button>`).join('');
 }
 
-function buildPills() {
-  const pills = document.getElementById('pills');
-  const cats = [
-    { label: 'Collaboration', color: '#00e5a0' },
-    { label: 'Éthique', color: '#f5c842' },
-    { label: 'Urgence', color: '#ff3d5a' },
-    { label: 'Collectif', color: '#4db8ff' },
-  ];
-  pills.innerHTML = cats.map(c => `
-    <div class="spill" style="color:${c.color};border-color:${c.color}33;background:${c.color}11">
-      ${c.label}
-    </div>`).join('');
+// ═══════════════════════════════════════════
+// ENVIRONMENT SCENARIO ENGINE
+// ═══════════════════════════════════════════
+function goToEnvStep(stepIdx){
+  envStep = stepIdx;
+  applyEnvStep(ENV_STEPS[stepIdx]);
+  updateStepIndicator();
 }
 
-function addLog(color, msg) {
-  const log = document.getElementById('eventLog');
-  const time = getTime();
-  const item = document.createElement('div');
-  item.className = 'log-item';
-  item.innerHTML = `
-    <div class="log-dot" style="background:${color}"></div>
-    <span class="log-time">${time}</span>
-    <span class="log-msg">${msg}</span>`;
-  // Insert after title
-  const title = log.querySelector('div');
-  log.insertBefore(item, title ? title.nextSibling : log.firstChild);
-  // Keep max 5
-  const items = log.querySelectorAll('.log-item');
-  if (items.length > 5) items[items.length - 1].remove();
-}
-
-function switchScenario(idx) {
-  currentScenario = idx;
-  renderScenario();
-}
-
-function renderScenario() {
-  const s = SCENARIOS[currentScenario];
-
-  // Name + desc
-  document.getElementById('scName').textContent = `${s.emoji}  ${s.name}`;
-  document.getElementById('scName').style.color = s.color;
-  document.getElementById('scDesc').textContent = s.desc;
-
-  // Rebuild scenario bar
-  buildScenarioBar();
-
-  // HUD top
-  document.getElementById('hudTime').textContent = getTime();
-  document.getElementById('hudRoute').textContent = s.route;
-  const hudStatus = document.getElementById('hudStatus');
-  hudStatus.textContent = s.status;
-  hudStatus.style.color = s.statusColor;
-  hudStatus.style.borderColor = s.statusColor + '44';
-  hudStatus.style.background = s.statusColor + '11';
-
-  // Emergency overlay
-  const overlay = document.getElementById('emergencyOverlay');
-  if (s.emergency) overlay.classList.add('active');
-  else overlay.classList.remove('active');
-
-  // Speed
-  const speed = s.speed;
-  document.getElementById('speedNum').textContent = speed;
-  const arc = document.getElementById('speedArc');
-  const maxSpeed = 140;
-  const pct = speed / maxSpeed;
-  const circumference = 326;
-  const offset = circumference - pct * circumference * 0.75;
-  arc.style.strokeDashoffset = offset;
-  arc.style.stroke = s.color;
-
-  // Sensors
-  const sf = document.getElementById('sensorFront');
-  sf.style.width = s.sensorFront.w;
-  sf.style.background = s.sensorFront.c;
-  document.getElementById('sensorFrontVal').textContent = s.sensorFront.v;
-
-  // AI card
-  document.getElementById('aiLabel').textContent = s.aiLabel;
-  document.getElementById('aiLabel').style.color = s.aiLabelColor;
-  document.getElementById('aiDot').style.background = s.color;
-  document.getElementById('aiMsg').textContent = s.aiMsg;
-
-  const card = document.getElementById('aiCard');
-  card.style.borderColor = s.cardBorder;
-  card.style.background = s.cardBg;
-
-  const confFill = document.getElementById('confFill');
-  confFill.style.width = '0%';
-  confFill.style.background = s.confColor;
-  setTimeout(() => { confFill.style.width = s.confidence + '%'; }, 100);
-  document.getElementById('confVal').textContent = s.confidence + '%';
-
-  // Actions
-  const actionRow = document.getElementById('actionRow');
-  actionRow.innerHTML = s.actions.map((a, i) => {
-    const style = a.type === 'primary'
-      ? `background:${a.bg};color:var(--bg);border-color:${a.bg};font-weight:700`
-      : `background:transparent;color:${s.color};border-color:${s.color}44`;
-    return `<button class="act-btn ${a.type}" style="${style}" data-idx="${i}">${a.label}</button>`;
-  }).join('');
-
-  const toast = document.getElementById('respToast');
-  toast.classList.remove('show');
-
-  actionRow.querySelectorAll('.act-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const idx = +btn.dataset.idx;
-      const action = s.actions[idx];
-      toast.style.background = action.response.bg;
-      toast.style.color = action.response.color;
-      toast.style.border = `1px solid ${action.response.color}44`;
-      toast.textContent = action.response.msg;
-      toast.classList.add('show');
-      actionRow.querySelectorAll('.act-btn').forEach(b => b.disabled = true);
-      addLog(action.log.color, action.log.msg);
-    });
-  });
-
-  // Right panel
-  const authVal = document.getElementById('authorityVal');
-  authVal.textContent = s.authority;
-  authVal.style.color = s.authorityColor;
-  document.getElementById('authorityUnit').textContent = s.authorityUnit;
-
-  const alertVal = document.getElementById('alertVal');
-  alertVal.textContent = s.alert;
-  alertVal.style.color = s.alertColor;
-  document.getElementById('alertUnit').textContent = s.alertUnit;
-
-  // Authority bar
-  const human = document.getElementById('authHuman');
-  const ai = document.getElementById('authAI');
-  human.style.width = '0%';
-  ai.style.width = '0%';
-  setTimeout(() => {
-    human.style.width = s.authHuman + '%';
-    human.style.background = s.authorityColor;
-    ai.style.width = s.authAI + '%';
-  }, 100);
-  document.getElementById('authHumanPct').textContent = `${s.authHuman}% Contrôle`;
-  document.getElementById('authAIPct').textContent = `${s.authAI}% Assistance`;
-  const marker = document.getElementById('authMarker');
-  marker.textContent = s.authMarker;
-  marker.style.color = s.color;
-
-  // Event log — seed with scenario logs
-  const log = document.getElementById('eventLog');
-  // Clear all log items
-  log.querySelectorAll('.log-item').forEach(el => el.remove());
-  s.logs.forEach((t, i) => {
-    const item = document.createElement('div');
-    item.className = 'log-item';
-    item.innerHTML = `
-      <div class="log-dot" style="background:${s.color}"></div>
-      <span class="log-time">${t}</span>
-      <span class="log-msg">${s.logMsgs[i]}</span>`;
-    log.appendChild(item);
-  });
-
-  // Other car position
-  const otherCar = document.getElementById('otherCar');
-  otherCar.style.top = s.otherCarPos.top;
-  otherCar.style.left = s.otherCarPos.left;
-
-  // Detection ring
-  const ring = document.getElementById('detectionRing');
-  if (s.detection) {
-    ring.style.display = 'block';
-    ring.style.borderColor = s.detection.color;
-    ring.style.width = s.detection.size + 'px';
-    ring.style.height = s.detection.size + 'px';
-    ring.style.top = s.detection.top;
-    ring.style.left = s.detection.left;
-    ring.style.transform = 'translate(-50%, -50%)';
+function updateStepIndicator(){
+  for(let i=0;i<4;i++){
+    const node=document.getElementById(`step-${i}`);
+    const line=document.getElementById(`step-line-${i}`);
+    node.classList.remove('active','done');
+    if(line) line.classList.remove('done');
+    if(i < envStep){ node.classList.add('done'); if(line) line.classList.add('done'); }
+    else if(i === envStep){ node.classList.add('active'); }
   }
 }
 
-// Clock tick
-setInterval(() => {
-  document.getElementById('hudTime').textContent = getTime();
-}, 10000);
+function applyEnvStep(step){
+  const color = step.color;
 
-buildPills();
+  // Scenario label
+  document.getElementById('scName').textContent = `🏔  Alpine Avalanche Risk`;
+  document.getElementById('scName').style.color = color;
+  document.getElementById('scDesc').textContent = step.label;
+
+  // HUD
+  document.getElementById('hudTime').textContent = getTime();
+  const hudStatus=document.getElementById('hudStatus');
+  hudStatus.textContent = step.status;
+  hudStatus.style.color = step.statusColor;
+  hudStatus.style.borderColor = step.statusColor+'44';
+  hudStatus.style.background = step.statusColor+'11';
+
+  // Weather bar
+  document.getElementById('weatherBar').classList.add('visible');
+  document.getElementById('wxTemp').textContent=step.wxTemp; document.getElementById('wxTemp').style.color=step.wxTempColor;
+  document.getElementById('wxVis').textContent=step.wxVis; document.getElementById('wxVis').style.color=step.wxVisColor;
+  document.getElementById('wxWind').textContent=step.wxWind; document.getElementById('wxWind').style.color=step.wxWindColor;
+  document.getElementById('wxRoad').textContent=step.wxRoad; document.getElementById('wxRoad').style.color=step.wxRoadColor;
+  document.getElementById('wxAvalanche').textContent=step.wxAvalanche; document.getElementById('wxAvalanche').style.color=step.wxAvColor;
+  const wxAlert=document.getElementById('wxAlert');
+  if(step.wxAlert){ wxAlert.classList.add('visible'); } else { wxAlert.classList.remove('visible'); }
+
+  // Speed
+  document.getElementById('speedNum').textContent=step.speed;
+  document.getElementById('speedNum').style.color=color;
+  const arc=document.getElementById('speedArc');
+  const pct=step.speed/140;
+  arc.style.strokeDashoffset=326-pct*326*0.75;
+  arc.style.stroke=color;
+
+  // Sensor
+  document.getElementById('sensorFront').style.width=step.sensorFront.w;
+  document.getElementById('sensorFront').style.background=step.sensorFront.c;
+  document.getElementById('sensorFrontVal').textContent=step.sensorFront.v;
+
+  // AI card
+  document.getElementById('aiLabel').textContent=step.aiLabel;
+  document.getElementById('aiLabel').style.color=step.aiLabelColor;
+  document.getElementById('aiDot').style.background=color;
+  document.getElementById('aiMsg').textContent=step.aiMsg;
+  const card=document.getElementById('aiCard');
+  card.style.borderColor=step.cardBorder; card.style.background=step.cardBg;
+  const cf=document.getElementById('confFill');
+  cf.style.width='0%'; cf.style.background=color;
+  setTimeout(()=>{ cf.style.width=step.confidence+'%'; },100);
+  document.getElementById('confVal').textContent=step.confidence+'%';
+
+  // Authority
+  document.getElementById('authorityVal').textContent=step.authority;
+  document.getElementById('authorityVal').style.color=step.authorityColor;
+  document.getElementById('authorityUnit').textContent=step.authorityUnit;
+  document.getElementById('alertVal').textContent=step.alert;
+  document.getElementById('alertVal').style.color=step.alertColor;
+  document.getElementById('alertUnit').textContent=step.alertUnit;
+
+  document.getElementById('authHuman').style.width='0%';
+  document.getElementById('authAI').style.width='0%';
+  setTimeout(()=>{
+    document.getElementById('authHuman').style.width=step.authHuman+'%';
+    document.getElementById('authHuman').style.background=step.authorityColor;
+    document.getElementById('authAI').style.width=step.authAI+'%';
+  },100);
+  document.getElementById('authHumanPct').textContent=`${step.authHuman}% Control`;
+  document.getElementById('authAIPct').textContent=`${step.authAI}% Assist`;
+  document.getElementById('authMarker').textContent=step.authMarker;
+  document.getElementById('authMarker').style.color=color;
+
+  // Overlays
+  document.getElementById('emergencyOverlay').classList.toggle('active',!!step.emergencyOverlay);
+  const so=document.getElementById('snowOverlay');
+  so.className='snow-overlay';
+  if(step.snowOverlayClass) so.classList.add(step.snowOverlayClass);
+
+  // Snow intensity
+  const sl=document.getElementById('snowLayer');
+  const bl=document.getElementById('blizzardLayer');
+  sl.classList.remove('active'); bl.classList.remove('active');
+  if(step.snowIntensity==='light'||step.snowIntensity==='heavy'){ sl.classList.add('active'); createSnowflakes(step.snowIntensity==='heavy'?60:25); }
+  if(step.snowIntensity==='blizzard'){ sl.classList.add('active'); bl.classList.add('active'); createSnowflakes(80); }
+
+  // Road visuals
+  const roadView=document.getElementById('roadView');
+  const roadSurface=document.getElementById('roadSurface');
+  const roadSnow=document.getElementById('roadSnow');
+  const roadMountains=document.getElementById('roadMountains');
+  const avalancheMass=document.getElementById('avalancheMass');
+  const roadLine=document.getElementById('roadLine');
+
+  roadMountains.classList.add('active');
+  avalancheMass.classList.remove('active');
+  roadLine.classList.remove('slowing','stopped');
+
+  if(step.roadStyle==='snowy'){
+    roadView.style.background='linear-gradient(180deg,#0c1a2e 0%,#081018 100%)';
+    roadSurface.style.background='linear-gradient(180deg,#1c2638 0%,#222c3e 100%)';
+    roadSnow.classList.add('thick');
+  } else if(step.roadStyle==='blizzard'){
+    roadView.style.background='linear-gradient(180deg,#0a1628 0%,#060c18 100%)';
+    roadSurface.style.background='linear-gradient(180deg,#1a2234 0%,#1e2840 100%)';
+    roadSnow.classList.add('thick');
+    roadLine.classList.add('slowing');
+  } else if(step.roadStyle==='avalanche'){
+    roadView.style.background='linear-gradient(180deg,#0a1020 0%,#060810 100%)';
+    roadSurface.style.background='linear-gradient(180deg,#1a2030 0%,#1c2438 100%)';
+    roadLine.classList.add('stopped');
+    setTimeout(()=>{ avalancheMass.classList.add('active'); },300);
+    document.getElementById('mapHazard').classList.add('visible');
+  } else if(step.roadStyle==='tunnel'){
+    roadView.style.background='linear-gradient(180deg,#060810 0%,#08080c 100%)';
+    roadSurface.style.background='linear-gradient(180deg,#101018 0%,#0c0c14 100%)';
+    roadSnow.classList.remove('thick');
+    roadLine.classList.add('stopped');
+    roadMountains.classList.remove('active');
+    document.getElementById('mapHazard').classList.add('visible');
+  } else {
+    roadView.style.background='linear-gradient(180deg,#0a1020 0%,#060810 100%)';
+    roadSurface.style.background='linear-gradient(180deg,#181c28 0%,#1e2235 100%)';
+    roadSnow.classList.remove('thick');
+  }
+
+  // Detection ring
+  const ring=document.getElementById('detectionRing');
+  if(step.step < 3){
+    ring.style.display='block';
+    ring.style.borderColor=color;
+    ring.style.width='65px'; ring.style.height='65px';
+    ring.style.top='45px'; ring.style.left='50%';
+    ring.style.transform='translate(-50%,-50%)';
+  } else { ring.style.display='none'; }
+
+  // Actions
+  const actionRow=document.getElementById('actionRow');
+  const toast=document.getElementById('respToast');
+  toast.classList.remove('show');
+  actionRow.innerHTML=step.actions.map((a,i)=>{
+    const style=a.type==='primary'
+      ?`background:${a.bg};color:var(--bg);border-color:${a.bg};font-weight:700`
+      :`background:transparent;color:${color};border-color:${color}44`;
+    return `<button class="act-btn ${a.type}" style="${style}" data-idx="${i}">${a.label}</button>`;
+  }).join('');
+  actionRow.querySelectorAll('.act-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const a=step.actions[+btn.dataset.idx];
+      toast.style.background=a.response.bg; toast.style.color=a.response.color;
+      toast.style.border=`1px solid ${a.response.color}44`;
+      toast.textContent=a.response.msg; toast.classList.add('show');
+      actionRow.querySelectorAll('.act-btn').forEach(b=>b.disabled=true);
+      addLog(a.log.color, a.log.msg);
+      // Auto-advance to next step on primary action
+      if(a.type==='primary' && envStep<3){
+        setTimeout(()=>{ goToEnvStep(envStep+1); },1800);
+      }
+    });
+  });
+
+  // Seed logs
+  const log=document.getElementById('eventLog');
+  log.querySelectorAll('.log-item').forEach(el=>el.remove());
+  step.logMsgs.forEach((msg,i)=>{
+    const t=['07:42','07:41','07:40'][i]||getTime();
+    const item=document.createElement('div');
+    item.className='log-item';
+    item.innerHTML=`<div class="log-dot" style="background:${color}"></div><span class="log-time">${t}</span><span class="log-msg">${msg}</span>`;
+    log.appendChild(item);
+  });
+
+  // Map
+  document.getElementById('mapCar').style.background=step.colorRaw;
+  document.getElementById('mapCar').style.boxShadow=`0 0 8px ${step.colorRaw}`;
+}
+
+// ═══════════════════════════════════════════
+// MEDICAL SCENARIO ENGINE
+// ═══════════════════════════════════════════
+function runMedicalScenario(){
+  clearInterval(countdownInterval);
+  document.getElementById('driverStateWidget').classList.add('visible');
+  const actionRow=document.getElementById('actionRow');
+  const toast=document.getElementById('respToast');
+  actionRow.innerHTML=`
+    <button class="act-btn primary" id="respondOk" style="background:var(--orange);color:var(--bg);border-color:var(--orange);font-weight:700">✓ I'm fine</button>
+    <button class="act-btn" id="respondStop" style="background:transparent;color:var(--orange);border-color:rgba(255,140,66,.4)">🅿 Voluntary stop</button>
+    <button class="act-btn" id="respondNothing" style="background:transparent;color:var(--text-dim);border-color:rgba(255,255,255,.08)">⏳ Simulate no response →</button>`;
+  document.getElementById('respondOk').addEventListener('click',()=>{
+    clearInterval(countdownInterval);
+    document.getElementById('countdownWidget').classList.remove('visible');
+    toast.style.background='rgba(0,229,160,.1)'; toast.style.color='var(--green)'; toast.style.border='1px solid rgba(0,229,160,.4)';
+    toast.textContent='✓ Response received. Monitoring maintained. Drive carefully.';
+    toast.classList.add('show');
+    actionRow.querySelectorAll('.act-btn').forEach(b=>b.disabled=true);
+    addLog('var(--green)','Driver responds · monitoring active');
+    document.getElementById('vitalState').textContent='Stable'; document.getElementById('vitalState').style.color='var(--yellow)';
+    document.getElementById('orangeOverlay').classList.remove('active');
+  });
+  document.getElementById('respondStop').addEventListener('click',()=>{
+    clearInterval(countdownInterval);
+    document.getElementById('countdownWidget').classList.remove('visible');
+    toast.style.background='rgba(255,140,66,.1)'; toast.style.color='var(--orange)'; toast.style.border='1px solid rgba(255,140,66,.4)';
+    toast.textContent='↩ Guided emergency stop initiated. Hazard lights activated.';
+    toast.classList.add('show');
+    actionRow.querySelectorAll('.act-btn').forEach(b=>b.disabled=true);
+    addLog('var(--orange)','Guided stop · driver cooperates');
+  });
+  document.getElementById('respondNothing').addEventListener('click',()=>{
+    actionRow.querySelectorAll('.act-btn').forEach(b=>b.disabled=true);
+    // 3s countdown
+    const cdw=document.getElementById('countdownWidget');
+    cdw.style.borderColor='rgba(255,140,66,0.5)'; cdw.style.background='rgba(255,140,66,0.05)';
+    document.getElementById('cdwBg').style.background='var(--orange)';
+    document.getElementById('cdwLabel').style.color='var(--orange)';
+    document.getElementById('cdwNumber').style.color='var(--orange)';
+    document.getElementById('cdwFill').style.background='var(--orange)';
+    document.getElementById('cdwMsg').textContent='No response detected · AI taking over in…';
+    cdw.classList.add('visible');
+    addLog('var(--orange)','⏱ 3s countdown — no driver response');
+    let count=3;
+    document.getElementById('cdwNumber').textContent=count;
+    document.getElementById('cdwFill').style.width='100%';
+    countdownInterval=setInterval(()=>{
+      count--;
+      if(count>0){
+        document.getElementById('cdwNumber').textContent=count;
+        document.getElementById('cdwFill').style.width=((count/3)*100)+'%';
+        addLog('var(--red)',`⏱ ${count}s · still no response...`);
+      } else {
+        clearInterval(countdownInterval);
+        cdw.classList.remove('visible');
+        // AI takeover
+        addLog('var(--red)','🚨 AI takeover — driver unresponsive');
+        document.getElementById('aiMsg').textContent='🚨 No response after 3 seconds.\nAI has taken full vehicle control.\nGradual deceleration · Emergency lane.';
+        document.getElementById('aiLabel').textContent='AI · Full Control';
+        document.getElementById('aiLabel').style.color='var(--red)';
+        document.getElementById('aiDot').style.background='var(--red)';
+        document.getElementById('aiCard').style.borderColor='rgba(255,61,90,.5)'; document.getElementById('aiCard').style.background='rgba(255,61,90,.08)';
+        document.getElementById('authorityVal').textContent='AI'; document.getElementById('authorityVal').style.color='var(--red)';
+        document.getElementById('authorityUnit').textContent='Emergency medical control';
+        document.getElementById('authHuman').style.width='8%'; document.getElementById('authHuman').style.background='var(--red)';
+        document.getElementById('authAI').style.width='90%';
+        document.getElementById('authHumanPct').textContent='8% (locked)'; document.getElementById('authAIPct').textContent='90% Control';
+        document.getElementById('authMarker').textContent='🚨'; document.getElementById('authMarker').style.color='var(--red)';
+        document.getElementById('orangeOverlay').classList.remove('active');
+        document.getElementById('emergencyOverlay').classList.add('active');
+        document.getElementById('hudStatus').textContent='🚨 MEDICAL EMERG.';
+        document.getElementById('hudStatus').style.color='var(--red)';
+        document.getElementById('alertVal').textContent='CRITICAL'; document.getElementById('alertVal').style.color='var(--red)';
+        document.getElementById('alertUnit').textContent='AI control — medical emergency';
+        // Wake-up attempt buttons
+        setTimeout(()=>{
+          addLog('var(--orange)','⚕ Wake-up attempt: sound + vibration');
+          document.getElementById('aiMsg').textContent='⚕ Wake-up attempts in progress:\n— Auditory stimulus (110dB)\n— Seat vibration\n— Cockpit light pulse\n\nNo response → Ambulance call in 5s…';
+          actionRow.innerHTML=`
+            <button class="act-btn primary" id="wakeOk" style="background:var(--green);color:var(--bg);border-color:var(--green);font-weight:700">✓ Driver regains consciousness</button>
+            <button class="act-btn" id="wakeNo" style="background:transparent;color:var(--red);border-color:rgba(255,61,90,.4)">✕ No response → Call ambulance</button>`;
+          document.getElementById('wakeOk').addEventListener('click',()=>{
+            document.getElementById('emergencyOverlay').classList.remove('active');
+            addLog('var(--green)','✓ Driver conscious — smooth handback');
+            document.getElementById('aiMsg').textContent='✓ Driver conscious detected.\nGradual handback to manual control.\nHolding on emergency shoulder.\nMedical consultation strongly advised.';
+            document.getElementById('aiLabel').textContent='AI · Recovery'; document.getElementById('aiLabel').style.color='var(--green)';
+            actionRow.querySelectorAll('.act-btn').forEach(b=>b.disabled=true);
+            updateVitals({hr:65,tension:'Low',blink:10,drift:'±2°',state:'Awake',hrColor:'var(--yellow)',stateColor:'var(--yellow)'});
+          });
+          document.getElementById('wakeNo').addEventListener('click',()=>{
+            actionRow.querySelectorAll('.act-btn').forEach(b=>b.disabled=true);
+            addLog('var(--red)','🚑 Ambulance called · GPS position shared');
+            document.getElementById('ambulanceOverlay').classList.add('active');
+            document.getElementById('ambOkBtn').onclick=()=>{
+              document.getElementById('ambulanceOverlay').classList.remove('active');
+              document.getElementById('emergencyOverlay').classList.remove('active');
+              addLog('var(--green)','✓ Driver conscious — ambulance cancelled');
+            };
+          });
+        },2500);
+      }
+    },1000);
+  });
+}
+
+// ═══════════════════════════════════════════
+// RENDER SCENARIO
+// ═══════════════════════════════════════════
+function renderScenario(){
+  const s=SCENARIOS[currentScenario];
+  clearInterval(countdownInterval);
+  buildScenarioBar();
+
+  // Step indicator
+  const si=document.getElementById('stepIndicator');
+  si.classList.toggle('visible', !!s.isEnvironmental);
+
+  // Mountain bg
+  const mb=document.getElementById('mountainBg');
+  const ms=document.getElementById('mountainSvg');
+  const rb=document.getElementById('roadBg');
+  const sl=document.getElementById('snowLayer');
+  const bl=document.getElementById('blizzardLayer');
+  const wab=document.getElementById('weatherBar');
+
+  if(s.isEnvironmental){
+    mb.classList.add('active'); ms.classList.add('active');
+    rb.style.opacity='0';
+    document.getElementById('dashboard').style.background='#060c1a';
+    wab.classList.add('visible');
+    envStep=0;
+    updateStepIndicator();
+    applyEnvStep(ENV_STEPS[0]);
+    return;
+  }
+
+  // Non-env: reset
+  mb.classList.remove('active'); ms.classList.remove('active');
+  rb.style.opacity='1';
+  sl.classList.remove('active'); bl.classList.remove('active');
+  document.getElementById('dashboard').style.background='var(--dash)';
+  wab.classList.remove('visible');
+  document.getElementById('snowOverlay').className='snow-overlay';
+  document.getElementById('ambulanceOverlay').classList.remove('active');
+  document.getElementById('countdownWidget').classList.remove('visible');
+  document.getElementById('driverStateWidget').classList.toggle('visible',!!s.medical);
+  document.getElementById('mapHazard').classList.remove('visible');
+  document.getElementById('roadSnow').classList.remove('thick');
+  document.getElementById('roadMountains').classList.remove('active');
+  document.getElementById('avalancheMass').classList.remove('active');
+  document.getElementById('roadLine').classList.remove('slowing','stopped');
+  document.getElementById('roadView').style.background='linear-gradient(180deg,#0a1020 0%,#060810 100%)';
+  document.getElementById('roadSurface').style.background='linear-gradient(180deg,#181c28 0%,#1e2235 100%)';
+
+  document.getElementById('scName').textContent=`${s.emoji}  ${s.name}`;
+  document.getElementById('scName').style.color=s.color;
+  document.getElementById('scDesc').textContent=s.desc;
+
+  document.getElementById('hudTime').textContent=getTime();
+  document.getElementById('hudRoute').textContent=s.route;
+  document.getElementById('routeDot').style.background=s.colorRaw;
+  const hudStatus=document.getElementById('hudStatus');
+  hudStatus.textContent=s.status; hudStatus.style.color=s.statusColor;
+  hudStatus.style.borderColor=s.statusColor+'44'; hudStatus.style.background=s.statusColor+'11';
+
+  document.getElementById('emergencyOverlay').classList.toggle('active',s.emergency);
+  document.getElementById('orangeOverlay').classList.toggle('active',s.orange);
+
+  if(s.vitals) updateVitals(s.vitals);
+
+  document.getElementById('speedNum').textContent=s.speed;
+  document.getElementById('speedNum').style.color=s.color;
+  const arc=document.getElementById('speedArc');
+  const pct=s.speed/140;
+  arc.style.strokeDashoffset=326-pct*326*0.75; arc.style.stroke=s.color;
+
+  document.getElementById('sensorFront').style.width=s.sensorFront.w;
+  document.getElementById('sensorFront').style.background=s.sensorFront.c;
+  document.getElementById('sensorFrontVal').textContent=s.sensorFront.v;
+  document.getElementById('mapCar').style.background=s.colorRaw;
+  document.getElementById('mapCar').style.boxShadow=`0 0 8px ${s.colorRaw}`;
+
+  document.getElementById('aiLabel').textContent=s.aiLabel;
+  document.getElementById('aiLabel').style.color=s.aiLabelColor;
+  document.getElementById('aiDot').style.background=s.color;
+  document.getElementById('aiMsg').textContent=s.aiMsg;
+  const card=document.getElementById('aiCard');
+  card.style.borderColor=s.cardBorder; card.style.background=s.cardBg;
+  const cf=document.getElementById('confFill');
+  cf.style.width='0%'; cf.style.background=s.confColor;
+  setTimeout(()=>{ cf.style.width=s.confidence+'%'; },100);
+  document.getElementById('confVal').textContent=s.confidence+'%';
+
+  const actionRow=document.getElementById('actionRow');
+  const toast=document.getElementById('respToast');
+  toast.classList.remove('show');
+
+  if(!s.isMedical){
+    actionRow.innerHTML=s.actions.map((a,i)=>{
+      const style=a.type==='primary'?`background:${a.bg};color:var(--bg);border-color:${a.bg};font-weight:700`:`background:transparent;color:${s.color};border-color:${s.color}44`;
+      return `<button class="act-btn ${a.type}" style="${style}" data-idx="${i}">${a.label}</button>`;
+    }).join('');
+    actionRow.querySelectorAll('.act-btn').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const a=s.actions[+btn.dataset.idx];
+        toast.style.background=a.response.bg; toast.style.color=a.response.color;
+        toast.style.border=`1px solid ${a.response.color}44`;
+        toast.textContent=a.response.msg; toast.classList.add('show');
+        actionRow.querySelectorAll('.act-btn').forEach(b=>b.disabled=true);
+        addLog(a.log.color,a.log.msg);
+      });
+    });
+  }
+
+  document.getElementById('authorityVal').textContent=s.authority; document.getElementById('authorityVal').style.color=s.authorityColor;
+  document.getElementById('authorityUnit').textContent=s.authorityUnit;
+  document.getElementById('alertVal').textContent=s.alert; document.getElementById('alertVal').style.color=s.alertColor;
+  document.getElementById('alertUnit').textContent=s.alertUnit;
+
+  document.getElementById('authHuman').style.width='0%'; document.getElementById('authAI').style.width='0%';
+  setTimeout(()=>{
+    document.getElementById('authHuman').style.width=s.authHuman+'%'; document.getElementById('authHuman').style.background=s.authorityColor;
+    document.getElementById('authAI').style.width=s.authAI+'%';
+  },100);
+  document.getElementById('authHumanPct').textContent=`${s.authHuman}% Control`;
+  document.getElementById('authAIPct').textContent=`${s.authAI}% Assist`;
+  document.getElementById('authMarker').textContent=s.authMarker; document.getElementById('authMarker').style.color=s.color;
+
+  const log=document.getElementById('eventLog');
+  log.querySelectorAll('.log-item').forEach(el=>el.remove());
+  s.logs.forEach((t,i)=>{
+    const item=document.createElement('div');
+    item.className='log-item';
+    item.innerHTML=`<div class="log-dot" style="background:${s.color}"></div><span class="log-time">${t}</span><span class="log-msg">${s.logMsgs[i]}</span>`;
+    log.appendChild(item);
+  });
+
+  const otherCar=document.getElementById('otherCar');
+  otherCar.style.top=s.otherCarPos.top; otherCar.style.left=s.otherCarPos.left;
+  const ring=document.getElementById('detectionRing');
+  if(s.detection){
+    ring.style.display='block'; ring.style.borderColor=s.detection.color;
+    ring.style.width=s.detection.size+'px'; ring.style.height=s.detection.size+'px';
+    ring.style.top=s.detection.top; ring.style.left=s.detection.left;
+    ring.style.transform='translate(-50%,-50%)';
+  }
+
+  if(s.isMedical) setTimeout(()=>runMedicalScenario(),500);
+}
+
+function switchScenario(idx){ currentScenario=idx; renderScenario(); }
+
+setInterval(()=>{ document.getElementById('hudTime').textContent=getTime(); },15000);
+createSnowflakes(0);
 renderScenario();
 </script>
 </body>
