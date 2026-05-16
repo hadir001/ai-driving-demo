@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Co-Pilot · HUD</title>
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@200;300;400;600;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --g:#00ffb0;--b:#40d0ff;--y:#ffe060;--o:#ff9940;--r:#ff4060;--ice:#b8eeff;
+  --w:rgba(255,255,255,.92);--d:rgba(255,255,255,.38);--ghost:rgba(255,255,255,.09);
+}
+body{background:#000;font-family:'Exo 2',sans-serif;height:100vh;display:flex;flex-direction:column;overflow:hidden;user-select:none}
+
+/* ══ WINDSHIELD ══ */
+.ws{flex:1;position:relative;overflow:hidden;
+  background:linear-gradient(180deg,#08101e 0%,#0c1828 38%,#0e1c30 58%,#080e18 75%,#040810 100%)}
+.ws::before{content:'';position:absolute;inset:0;pointer-events:none;z-index:100;
+  background:linear-gradient(90deg,#000 0%,#000 3.5%,transparent 7%,transparent 93%,#000 96.5%,#000 100%),
+             linear-gradient(180deg,#000 0%,#000 1.5%,transparent 4.5%,transparent 86%,rgba(0,0,0,.75) 93%,#000 100%)}
+.ws::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:99;
+  background:linear-gradient(155deg,rgba(255,255,255,.02) 0%,transparent 45%,rgba(255,255,255,.007) 100%)}
+
+/* stars */
+.stars{position:absolute;top:0;left:0;right:0;height:52%;pointer-events:none}
+.star{position:absolute;border-radius:50%;background:#fff;animation:tw var(--d,3s) ease-in-out infinite}
+@keyframes tw{0%,100%{opacity:var(--o,.4)}50%{opacity:calc(var(--o,.4)*.25)}}
+
+/* mountains */
+.mts{position:absolute;bottom:46%;left:0;right:0;height:55%;display:none}
+.mts.show{display:block}
+
+/* snow */
+.snow{position:absolute;inset:0;overflow:hidden;pointer-events:none;opacity:0;transition:opacity 1.2s;z-index:2}
+.snow.show{opacity:1}
+.flake{position:absolute;top:-10px;color:rgba(210,235,255,.65);animation:sf linear infinite}
+@keyframes sf{to{transform:translateY(100vh) rotate(360deg)}}
+.blizzard{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .5s;
+  background:repeating-linear-gradient(108deg,transparent 0,transparent 9px,rgba(180,220,255,.03) 9px,rgba(180,220,255,.03) 10px)}
+.blizzard.show{opacity:1;animation:bz .25s linear infinite}
+@keyframes bz{to{background-position:18px 18px}}
+
+/* road */
+.road{position:absolute;bottom:0;left:0;right:0;height:48%}
+.road-s{position:absolute;bottom:0;left:0;right:0;height:100%;
+  background:linear-gradient(180deg,#09101a 0%,#0c131e 100%);
+  clip-path:polygon(22% 0%,78% 0%,100% 100%,0% 100%)}
+.road-l{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:3px;height:100%;
+  background:repeating-linear-gradient(to top,rgba(255,225,60,.45) 0,rgba(255,225,60,.45) 22px,transparent 22px,transparent 46px);
+  animation:rl .7s linear infinite}
+@keyframes rl{to{background-position:0 -68px}}
+.road-l.slow{animation-duration:2.8s}
+.road-l.stop{animation-play-state:paused}
+
+/* alpine overlay */
+.alp{position:absolute;inset:0;z-index:1;pointer-events:none;opacity:0;transition:opacity 1s;
+  background:radial-gradient(ellipse at 50% 10%,rgba(184,238,255,.07) 0%,transparent 65%)}
+.alp.show{opacity:1}
+
+/* ══ SHAKE ══ */
+@keyframes shake{
+  0%{transform:translate(0,0) rotate(0)}
+  10%{transform:translate(-5px,-3px) rotate(-.5deg)}
+  20%{transform:translate(6px,4px) rotate(.5deg)}
+  30%{transform:translate(-4px,5px) rotate(-.3deg)}
+  40%{transform:translate(5px,-4px) rotate(.4deg)}
+  50%{transform:translate(-6px,3px) rotate(-.5deg)}
+  60%{transform:translate(4px,-5px) rotate(.3deg)}
+  70%{transform:translate(-5px,4px) rotate(-.4deg)}
+  80%{transform:translate(6px,-3px) rotate(.5deg)}
+  90%{transform:translate(-4px,5px) rotate(-.3deg)}
+  100%{transform:translate(0,0) rotate(0)}
+}
+.ws.shaking{animation:shake .18s ease-in-out infinite}
+
+/* ══ EMERGENCY RING ══ */
+.ering{position:absolute;inset:0;pointer-events:none;z-index:51;border:4px solid transparent;opacity:0;transition:opacity .4s}
+.ering.red{border-color:var(--r);opacity:1;animation:rp .7s ease-in-out infinite}
+.ering.orange{border-color:var(--o);opacity:1;animation:op 2s ease-in-out infinite}
+.ering.ice{border-color:var(--ice);opacity:.7;animation:ip 2.5s ease-in-out infinite}
+@keyframes rp{0%,100%{box-shadow:inset 0 0 60px rgba(255,64,96,.18)}50%{box-shadow:inset 0 0 130px rgba(255,64,96,.5)}}
+@keyframes op{0%,100%{box-shadow:inset 0 0 40px rgba(255,153,64,.1)}50%{box-shadow:inset 0 0 90px rgba(255,153,64,.35)}}
+@keyframes ip{0%,100%{box-shadow:inset 0 0 30px rgba(184,238,255,.05)}50%{box-shadow:inset 0 0 70px rgba(184,238,255,.18)}}
+
+/* ══ HUD LAYER ══ */
+.hud{position:absolute;inset:0;z-index:50;pointer-events:none}
+.hud *{pointer-events:auto}
+
+/* ── TOP STRIP ── */
+.top{position:absolute;top:16px;left:5%;right:5%;display:flex;align-items:flex-start;justify-content:space-between;pointer-events:none}
+.clock{font-family:'DM Mono',monospace;font-size:12px;font-weight:300;color:var(--d);letter-spacing:.2em}
+.route-ctr{display:flex;flex-direction:column;align-items:center;gap:3px}
+.route-sub{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.18em;color:var(--d);text-transform:uppercase}
+.route-main{font-size:13px;font-weight:600;letter-spacing:.06em;color:var(--w)}
+.wx-top{font-family:'DM Mono',monospace;font-size:11px;color:var(--d);text-align:right;display:flex;flex-direction:column;gap:2px}
+
+/* ── SPEED (bottom-left) ── */
+.spd-cluster{position:absolute;bottom:17%;left:5%;display:flex;flex-direction:column;align-items:flex-start;gap:0}
+.spd-num{font-size:68px;font-weight:800;line-height:1;color:var(--w);letter-spacing:-.02em;transition:color .3s}
+.spd-unit{font-family:'DM Mono',monospace;font-size:10px;color:var(--d);letter-spacing:.2em;margin-top:-2px}
+.spd-limit{width:38px;height:38px;border-radius:50%;border:2.5px solid var(--w);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--w);margin-top:6px;transition:border-color .3s,color .3s,background .3s}
+.spd-limit.over{border-color:var(--r);color:var(--r);background:rgba(255,64,96,.15);animation:limitFlash 1s ease-in-out infinite}
+@keyframes limitFlash{0%,100%{background:rgba(255,64,96,.15)}50%{background:rgba(255,64,96,.35)}}
+
+/* ── RADAR ALERT ── */
+.radar{position:absolute;bottom:calc(17% + 90px);left:5%;
+  background:rgba(6,12,24,.8);border:1px solid rgba(255,64,96,.4);border-radius:10px;
+  padding:7px 12px;display:none;animation:slideU .3s ease;flex-direction:column;gap:3px}
+.radar.show{display:flex}
+@keyframes slideU{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.radar-title{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--r)}
+.radar-dist{font-size:14px;font-weight:700;color:var(--w)}
+.radar-sub{font-family:'DM Mono',monospace;font-size:9px;color:var(--d)}
+
+/* ── NAV ARROW (center-bottom) ── */
+.nav{position:absolute;bottom:13%;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:5px}
+.arr{width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;border-bottom:26px solid rgba(64,208,255,.55);filter:drop-shadow(0 0 6px rgba(64,208,255,.35));transition:all .4s}
+.arr.left{transform:rotate(-90deg)}.arr.right{transform:rotate(90deg)}
+.arr-d{font-family:'DM Mono',monospace;font-size:10px;color:var(--b);letter-spacing:.1em}
+
+/* ── FUEL (bottom-right) ── */
+.fuel-ctr{position:absolute;bottom:17%;right:5%;display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+.fuel-lbl{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:var(--d)}
+.fuel-bar{width:78px;height:4px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden}
+.fuel-fill{height:100%;border-radius:2px;transition:width 1.5s,background .5s}
+.fuel-km{font-size:13px;font-weight:600;color:var(--w);font-family:'DM Mono',monospace;transition:color .4s}
+.fuel-warn{font-family:'DM Mono',monospace;font-size:9px;color:var(--o);letter-spacing:.08em;display:none}
+.fuel-warn.show{display:block}
+
+/* ── AUTHORITY BAR ── */
+.auth{position:absolute;bottom:calc(17% - 22px);left:5%;right:5%;display:flex;align-items:center;gap:8px}
+.auth-lbl{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:var(--d)}
+.auth-track{flex:1;height:3px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden;position:relative}
+.auth-h{position:absolute;left:0;top:0;bottom:0;border-radius:2px;background:var(--g);transition:width 1.2s cubic-bezier(.4,0,.2,1),background .5s}
+.auth-a{position:absolute;right:0;top:0;bottom:0;border-radius:2px;background:var(--b);transition:width 1.2s cubic-bezier(.4,0,.2,1)}
+
+/* ══ NOTIFICATION CARDS ══
+   Minimal, corners only — never blocking road view */
+
+/* ── STATION PILL (top-right corner) ── */
+.station-pill{position:absolute;top:68px;right:5%;
+  background:rgba(6,14,24,.82);border:1px solid rgba(255,224,96,.3);border-radius:12px;
+  padding:10px 14px;backdrop-filter:blur(10px);display:none;animation:fadeR .35s ease;min-width:170px}
+.station-pill.show{display:block}
+@keyframes fadeR{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:none}}
+.sp-tag{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,224,96,.45);margin-bottom:6px}
+.sp-main{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.sp-name{font-size:13px;font-weight:600;color:var(--w)}
+.sp-price{font-size:15px;font-weight:800;color:var(--y)}
+.sp-info{font-family:'DM Mono',monospace;font-size:9px;color:var(--d);margin-top:3px}
+
+/* ── SIGN POPUP (top-left corner) ── */
+.sign-card{position:absolute;top:68px;left:5%;
+  background:rgba(6,14,24,.82);border:1px solid rgba(64,208,255,.22);border-radius:12px;
+  padding:10px 14px;backdrop-filter:blur(10px);display:none;animation:fadeL .35s ease;min-width:160px;max-width:200px}
+.sign-card.show{display:block}
+@keyframes fadeL{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:none}}
+.sign-icon-big{font-size:32px;display:block;text-align:center;margin-bottom:6px}
+.sign-tag{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:rgba(64,208,255,.4);margin-bottom:3px}
+.sign-title{font-size:12px;font-weight:700;color:var(--w);margin-bottom:3px}
+.sign-desc{font-size:10px;color:var(--d);line-height:1.5;font-weight:300}
+
+/* ── VITALS STRIP (left side, medical) ── */
+.vitals{position:absolute;top:68px;left:5%;display:none;flex-direction:column;gap:5px}
+.vitals.show{display:flex}
+.vrow{display:flex;align-items:center;gap:8px;font-family:'DM Mono',monospace;font-size:9px;color:var(--d)}
+.vk{font-size:8px;letter-spacing:.1em;text-transform:uppercase;width:62px}
+.vv{font-size:13px;font-weight:600;width:52px;transition:color .4s}
+.vbar{width:44px;height:2px;background:rgba(255,255,255,.07);border-radius:1px;overflow:hidden}
+.vbf{height:100%;border-radius:1px;transition:width .8s,background .5s}
+
+/* ── WEATHER STRIP (right side, alpine) ── */
+.wx-strip{position:absolute;top:68px;right:5%;display:none;flex-direction:column;gap:5px;align-items:flex-end}
+.wx-strip.show{display:flex}
+.wxrow{font-family:'DM Mono',monospace;font-size:9px;color:var(--d);display:flex;align-items:center;gap:6px}
+.wxk{font-size:8px;letter-spacing:.1em;text-transform:uppercase;opacity:.5}
+.wxv{font-size:11px;font-weight:600;transition:color .4s}
+
+/* ══ MAIN NOTIF — compact, bottom-center, non-blocking ══ */
+.notif{position:absolute;bottom:calc(17% + 12px);left:50%;transform:translateX(-50%);
+  background:rgba(6,12,24,.78);border:1px solid rgba(255,255,255,.11);border-radius:14px;
+  backdrop-filter:blur(14px);padding:12px 18px;min-width:260px;max-width:360px;
+  transition:border-color .4s;animation:notifIn .35s ease}
+@keyframes notifIn{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+.notif::before{content:'';position:absolute;top:0;left:15%;right:15%;height:1px;background:linear-gradient(90deg,transparent,currentColor,transparent);opacity:.3}
+.n-badge{display:flex;align-items:center;gap:7px;margin-bottom:7px}
+.n-dot{width:6px;height:6px;border-radius:50%;animation:dp 1.6s ease-in-out infinite;flex-shrink:0}
+@keyframes dp{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.75)}}
+.n-label{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.2em;text-transform:uppercase}
+.n-msg{font-size:12px;font-weight:400;line-height:1.5;color:var(--w);margin-bottom:9px}
+.n-conf{display:flex;align-items:center;gap:7px;font-family:'DM Mono',monospace;font-size:8px;color:var(--d);margin-bottom:9px}
+.n-cbar{flex:1;height:1.5px;background:rgba(255,255,255,.07);border-radius:1px;overflow:hidden}
+.n-cfill{height:100%;border-radius:1px;transition:width 1s}
+.n-actions{display:flex;gap:7px;flex-wrap:wrap}
+.hbtn{flex:1;min-width:70px;padding:8px 10px;border-radius:8px;font-family:'DM Mono',monospace;font-size:10px;font-weight:500;cursor:pointer;border:1px solid;transition:all .18s;text-align:center}
+.hbtn:hover{filter:brightness(1.18);transform:translateY(-1px)}
+.hbtn:disabled{opacity:.28;pointer-events:none}
+.hbtn.primary{font-weight:700}
+.n-toast{margin-top:8px;padding:7px 10px;border-radius:7px;font-family:'DM Mono',monospace;font-size:10px;line-height:1.5;display:none;animation:tIn .3s ease}
+.n-toast.show{display:block}
+@keyframes tIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* ══ COUNTDOWN ══ */
+.cd{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:130px;height:130px;border-radius:50%;border:2px solid;
+  background:rgba(6,12,24,.88);backdrop-filter:blur(8px);
+  display:none;flex-direction:column;align-items:center;justify-content:center;gap:5px;z-index:60}
+.cd.show{display:flex;animation:cdIn .3s ease}
+@keyframes cdIn{from{opacity:0;transform:translate(-50%,-50%) scale(.82)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+.cd-lbl{font-family:'DM Mono',monospace;font-size:7px;letter-spacing:.18em;text-transform:uppercase}
+.cd-n{font-size:52px;font-weight:800;line-height:1;animation:cdp .9s ease-in-out infinite}
+@keyframes cdp{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+.cd-sub{font-family:'DM Mono',monospace;font-size:8px;text-align:center;padding:0 10px;line-height:1.4}
+
+/* ══ SOUND NOTIF ══ */
+.sound-notif{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  background:rgba(6,12,24,.9);border:2px solid var(--o);border-radius:14px;
+  padding:16px 24px;text-align:center;display:none;z-index:65;animation:sIn .3s ease}
+.sound-notif.show{display:block}
+@keyframes sIn{from{opacity:0;transform:translate(-50%,-50%) scale(.9)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+.sn-icon{font-size:36px;margin-bottom:8px}
+.sn-title{font-size:14px;font-weight:700;color:var(--o);margin-bottom:4px}
+.sn-sub{font-family:'DM Mono',monospace;font-size:10px;color:var(--d);line-height:1.5}
+
+/* ══ AMBULANCE ══ */
+.amb{position:absolute;inset:0;z-index:200;background:rgba(4,6,12,.92);backdrop-filter:blur(8px);
+  display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;animation:fadeIn .4s ease}
+.amb.show{display:flex}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.amb-big{font-size:54px;animation:ap 1s ease-in-out infinite}
+@keyframes ap{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+.amb-title{font-size:20px;font-weight:800;color:var(--r);letter-spacing:.06em;text-align:center}
+.amb-body{font-family:'DM Mono',monospace;font-size:11px;color:var(--d);text-align:center;line-height:1.9}
+.amb-loc{font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,.18);margin-top:2px}
+.amb-cancel{padding:10px 26px;border-radius:10px;background:var(--g);color:#000;border:none;
+  font-family:'DM Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.1em;cursor:pointer;margin-top:8px;transition:all .2s}
+.amb-cancel:hover{filter:brightness(1.1);transform:translateY(-2px)}
+
+/* ══ STEP NAV (alpine) ══ */
+.step-nav{position:absolute;bottom:calc(17% - 22px - 26px);right:5%;display:none;gap:5px}
+.step-nav.show{display:flex}
+.sn{padding:5px 11px;border-radius:7px;font-family:'DM Mono',monospace;font-size:9px;cursor:pointer;
+  border:1px solid rgba(255,255,255,.12);background:rgba(6,12,24,.65);color:var(--d);transition:all .2s}
+.sn:hover{border-color:rgba(255,255,255,.28);color:var(--w)}
+.sn.active{border-color:var(--ice);color:var(--ice)}
+
+/* ══ USE CASE BAR ══ */
+.uc-bar{position:absolute;bottom:0;left:0;right:0;display:flex;background:rgba(0,0,0,.88);border-top:1px solid rgba(255,255,255,.06);z-index:150}
+.ucb{flex:1;padding:9px 4px 11px;font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;border:none;background:transparent;color:rgba(255,255,255,.28);transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:3px;border-top:2px solid transparent}
+.ucb:hover{color:rgba(255,255,255,.6)}
+.ucb.active{color:var(--w);border-top-color:var(--uc,var(--g))}
+.ucb-icon{font-size:17px}
+
+/* ── step dots ── */
+.dots{position:absolute;bottom:calc(9% + 44px);left:50%;transform:translateX(-50%);display:none;gap:7px;align-items:center}
+.dots.show{display:flex}
+.dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.18);transition:all .3s;cursor:pointer}
+.dot.active{width:18px;border-radius:2.5px}
+</style>
+</head>
+<body>
+<div class="ws" id="ws">
+  <!-- atmosphere -->
+  <div class="stars" id="stars"></div>
+  <div class="alp" id="alp"></div>
+  <div class="snow" id="snow"></div>
+  <div class="blizzard" id="blizzard"></div>
+
+  <!-- road -->
+  <div class="road">
+    <div class="road-s"></div>
+    <div class="road-l" id="rl"></div>
+  </div>
+
+  <!-- mountains -->
+  <div class="mts" id="mts">
+    <svg viewBox="0 0 1200 300" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="0,260 150,80 300,180 450,30 600,130 750,50 900,160 1050,60 1200,140 1200,300 0,300" fill="#090f1c" opacity=".96"/>
+      <polygon points="450,30 418,78 486,78" fill="rgba(200,230,255,.55)"/>
+      <polygon points="750,50 718,92 784,92" fill="rgba(200,230,255,.45)"/>
+      <polygon points="150,80 126,116 176,116" fill="rgba(200,230,255,.4)"/>
+      <polygon points="1050,60 1022,102 1082,102" fill="rgba(200,230,255,.42)"/>
+    </svg>
+  </div>
+
+  <!-- ring -->
+  <div class="ering" id="ering"></div>
+
+  <!-- HUD -->
+  <div class="hud">
+    <!-- TOP -->
+    <div class="top">
+      <div class="clock" id="clk">07:42</div>
+      <div class="route-ctr">
+        <div class="route-sub" id="rsub">itinéraire</div>
+        <div class="route-main" id="rmain">Genève → Lausanne</div>
+      </div>
+      <div class="wx-top"><span id="wx1">☀ 14°C</span><span id="wx2">A1 · km 42</span></div>
+    </div>
+
+    <!-- VITALS (medical) -->
+    <div class="vitals" id="vitals">
+      <div class="vrow"><span class="vk">Cardio</span><span class="vv" id="vHR" style="color:var(--r)">48 bpm</span><div class="vbar"><div class="vbf" id="vHRb" style="width:30%;background:var(--r)"></div></div></div>
+      <div class="vrow"><span class="vk">Clign.</span><span class="vv" id="vBl" style="color:var(--r)">3/min</span><div class="vbar"><div class="vbf" id="vBlb" style="width:14%;background:var(--r)"></div></div></div>
+      <div class="vrow"><span class="vk">Dérive</span><span class="vv" id="vDr" style="color:var(--o)">±6°</span><div class="vbar"><div class="vbf" id="vDrb" style="width:68%;background:var(--o)"></div></div></div>
+    </div>
+
+    <!-- STATION PILL (top-right) -->
+    <div class="station-pill" id="stPill">
+      <div class="sp-tag">⛽ Station recommandée</div>
+      <div class="sp-main">
+        <div class="sp-name" id="stName">Total Énergie</div>
+        <div class="sp-price" id="stPrice">1.84€</div>
+      </div>
+      <div class="sp-info" id="stInfo">1.2 km · sur votre route</div>
+    </div>
+
+    <!-- SIGN CARD (top-left) -->
+    <div class="sign-card" id="signCard">
+      <span class="sign-icon-big" id="signIcon">⚠️</span>
+      <div class="sign-tag">Panneau détecté</div>
+      <div class="sign-title" id="signTitle">—</div>
+      <div class="sign-desc" id="signDesc">—</div>
+    </div>
+
+    <!-- WEATHER STRIP (top-right, alpine) -->
+    <div class="wx-strip" id="wxStrip">
+      <div class="wxrow"><span class="wxk">Temp</span><span class="wxv" id="wxT" style="color:var(--ice)">-8°C</span></div>
+      <div class="wxrow"><span class="wxk">Visib.</span><span class="wxv" id="wxV" style="color:var(--ice)">420m</span></div>
+      <div class="wxrow"><span class="wxk">Vent</span><span class="wxv" id="wxW" style="color:var(--y)">62 km/h</span></div>
+      <div class="wxrow"><span class="wxk">Aval.</span><span class="wxv" id="wxA" style="color:var(--y)">MODÉRÉ</span></div>
+    </div>
+
+    <!-- RADAR ALERT (above speed, left) -->
+    <div class="radar" id="radar">
+      <div class="radar-title">📡 Radar fixe</div>
+      <div class="radar-dist" id="radarDist">800 m</div>
+      <div class="radar-sub" id="radarSub">Limite : 90 km/h</div>
+    </div>
+
+    <!-- SPEED -->
+    <div class="spd-cluster">
+      <div class="spd-num" id="spdNum">68</div>
+      <div class="spd-unit">km/h</div>
+      <div class="spd-limit" id="spdLimit">90</div>
+    </div>
+
+    <!-- NAV ARROW -->
+    <div class="nav"><div class="arr" id="navArr"></div><div class="arr-d" id="navDist">2.4 km</div></div>
+
+    <!-- FUEL -->
+    <div class="fuel-ctr">
+      <div class="fuel-lbl">Autonomie</div>
+      <div class="fuel-bar"><div class="fuel-fill" id="fuelFill" style="width:72%;background:var(--g)"></div></div>
+      <div class="fuel-km" id="fuelKm">180 km</div>
+      <div class="fuel-warn" id="fuelWarn">⚠ Insuffisant pour l'itinéraire</div>
+    </div>
+
+    <!-- AUTHORITY -->
+    <div class="auth">
+      <span class="auth-lbl">Humain</span>
+      <div class="auth-track"><div class="auth-h" id="authH" style="width:80%"></div><div class="auth-a" id="authA" style="width:18%"></div></div>
+      <span class="auth-lbl">IA</span>
+    </div>
+
+    <!-- MAIN NOTIF -->
+    <div class="notif" id="notif">
+      <div class="n-badge"><div class="n-dot" id="nDot"></div><span class="n-label" id="nLabel">IA · Surveillance</span></div>
+      <div class="n-msg" id="nMsg">Trajet en cours.</div>
+      <div class="n-conf"><span>Confiance</span><div class="n-cbar"><div class="n-cfill" id="nCfill" style="width:92%"></div></div><span id="nCval">92%</span></div>
+      <div class="n-actions" id="nActions"></div>
+      <div class="n-toast" id="nToast"></div>
+    </div>
+
+    <!-- COUNTDOWN -->
+    <div class="cd" id="cd">
+      <span class="cd-lbl" id="cdLbl" style="color:var(--o)">IA reprend dans</span>
+      <span class="cd-n" id="cdN" style="color:var(--o)">7</span>
+      <span class="cd-sub" id="cdSub" style="color:var(--d)">Aucune réponse</span>
+    </div>
+
+    <!-- SOUND NOTIF -->
+    <div class="sound-notif" id="soundNotif">
+      <div class="sn-icon">🔊</div>
+      <div class="sn-title">Stimulation sonore 110 dB</div>
+      <div class="sn-sub">Signal d'alerte activé · Vibration siège<br>Tentative de réveil conducteur</div>
+    </div>
+
+    <!-- AMBULANCE -->
+    <div class="amb" id="amb">
+      <div class="amb-big">🚑</div>
+      <div class="amb-title">AMBULANCE APPELÉE</div>
+      <div class="amb-body">Conducteur inconscient · IA en contrôle<br>Arrêt d'urgence · Feux de détresse actifs<br>Position GPS transmise aux secours</div>
+      <div class="amb-loc">📍 A1 · km 14.2 · Genève → Lausanne</div>
+      <button class="amb-cancel" id="ambCancel">✓ Conducteur conscient — Annuler</button>
+    </div>
+
+    <!-- STEP NAV (alpine) -->
+    <div class="step-nav" id="stepNav">
+      <div class="sn active" onclick="goStep(0)">1</div>
+      <div class="sn" onclick="goStep(1)">2</div>
+      <div class="sn" onclick="goStep(2)">3</div>
+      <div class="sn" onclick="goStep(3)">4</div>
+    </div>
+
+    <!-- DOTS -->
+    <div class="dots" id="dots"></div>
+
+    <!-- UC BAR -->
+    <div class="uc-bar">
+      <button class="ucb" style="--uc:var(--y)" onclick="loadUC(0)"><span class="ucb-icon">⛽</span>Carburant</button>
+      <button class="ucb" style="--uc:var(--o)" onclick="loadUC(1)"><span class="ucb-icon">🫀</span>Malaise</button>
+      <button class="ucb" style="--uc:var(--b)" onclick="loadUC(2)"><span class="ucb-icon">🎓</span>Débutant</button>
+      <button class="ucb" style="--uc:var(--ice)" onclick="loadUC(3)"><span class="ucb-icon">🏔</span>Avalanche</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ════ STARS ════ */
+(()=>{const c=document.getElementById('stars');for(let i=0;i<55;i++){const s=document.createElement('div');s.className='star';const z=Math.random()*1.4+.5;s.style.cssText=`width:${z}px;height:${z}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--d:${2+Math.random()*4}s;--o:${.15+Math.random()*.5};animation-delay:${-Math.random()*5}s`;c.appendChild(s);}})();
+
+/* ════ UTILS ════ */
+const $=id=>document.getElementById(id);
+const pad=n=>String(n).padStart(2,'0');
+const getTime=()=>{const d=new Date();return `${pad(d.getHours())}:${pad(d.getMinutes())}`};
+const show=(id,v)=>$(id).classList.toggle('show',v);
+const ring=t=>{const r=$('ering');r.className='ering'+(t?' '+t:'')};
+let cdTimer=null,autoTimer=null;
+
+function setSpeed(v,col){
+  $('spdNum').textContent=v;
+  $('spdNum').style.color=col||'var(--w)';
+}
+function setAuth(h,a,hc){
+  $('authH').style.width=h+'%';$('authH').style.background=hc||'var(--g)';
+  $('authA').style.width=a+'%';
+}
+function setNotif(label,lc,msg,conf,cc,bc){
+  $('nLabel').textContent=label;$('nLabel').style.color=lc;
+  $('nDot').style.background=lc;$('nMsg').textContent=msg;
+  $('notif').style.borderColor=bc||'rgba(255,255,255,.11)';
+  const cf=$('nCfill');cf.style.width='0%';cf.style.background=cc;
+  setTimeout(()=>{cf.style.width=conf+'%'},80);
+  $('nCval').textContent=conf+'%';
+  $('nActions').innerHTML='';$('nToast').classList.remove('show');
+}
+function addBtns(acts,ac){
+  const row=$('nActions');row.innerHTML='';
+  acts.forEach(a=>{
+    const b=document.createElement('button');
+    b.className='hbtn'+(a.primary?' primary':'');
+    b.textContent=a.label;
+    b.style.cssText=a.primary?`background:${ac};color:#000;border-color:${ac}`:`background:transparent;color:${ac};border-color:${ac}44`;
+    b.addEventListener('click',()=>{
+      row.querySelectorAll('.hbtn').forEach(x=>x.disabled=true);
+      if(a.cb){a.cb();}
+      if(a.resp){
+        const t=$('nToast');t.style.background=a.resp.bg;t.style.color=a.resp.color;
+        t.style.border=`1px solid ${a.resp.color}44`;t.textContent=a.resp.msg;t.classList.add('show');
+      }
+    });
+    row.appendChild(b);
+  });
+}
+function animSpeed(target,dur=2200){
+  const el=$('spdNum');let cur=parseInt(el.textContent)||0;
+  const step=Math.abs(target-cur)/(dur/80);
+  const iv=setInterval(()=>{
+    if(cur>target)cur=Math.max(target,cur-step);else cur=Math.min(target,cur+step);
+    el.textContent=Math.round(cur);if(Math.round(cur)===target)clearInterval(iv);
+  },80);
+}
+function makeSnow(n){
+  const w=$('snow');w.innerHTML='';
+  ['❄','·','*','❅','❆'].forEach((ch,i)=>{
+    for(let j=0;j<n/5;j++){
+      const f=document.createElement('div');f.className='flake';f.textContent=ch;
+      f.style.cssText=`left:${Math.random()*100}%;font-size:${7+Math.random()*9}px;animation-duration:${3.5+Math.random()*6}s;animation-delay:${-Math.random()*9}s;opacity:${.25+Math.random()*.55}`;
+      w.appendChild(f);
+    }
+  });
+}
+function buildDots(n,active,col){
+  const c=$('dots');c.innerHTML='';c.classList.add('show');
+  for(let i=0;i<n;i++){
+    const d=document.createElement('div');d.className='dot'+(i===active?' active':'');
+    if(i===active)d.style.background=col;c.appendChild(d);
+  }
+}
+function updDot(idx,col){
+  document.querySelectorAll('.dot').forEach((d,i)=>{
+    d.classList.toggle('active',i===idx);d.style.background=i===idx?col:'rgba(255,255,255,.18)';
+  });
+}
+function clearAuto(){clearTimeout(autoTimer);clearTimeout(cdTimer);}
+
+/* ════ RESET SCENE ════ */
+function resetScene(){
+  ring('');clearAuto();
+  show('vitals',false);show('wxStrip',false);show('mts',false);
+  show('snow',false);show('blizzard',false);show('alp',false);
+  show('stPill',false);show('signCard',false);show('amb',false);
+  show('radar',false);show('stepNav',false);show('cd',false);show('soundNotif',false);
+  $('ws').classList.remove('shaking');
+  $('rl').className='road-l';
+  $('spdLimit').className='spd-limit';
+  $('fuelWarn').classList.remove('show');
+  $('dots').classList.remove('show');
+  $('nToast').classList.remove('show');
+  $('nActions').innerHTML='';
+}
+
+/* ════════════════════════════════════
+   UC 0 — CARBURANT
+════════════════════════════════════ */
+let radarActive=false,radarDist=800,radarIv=null;
+
+function loadUC0(){
+  resetScene();
+  $('rsub').textContent='itinéraire actif';
+  $('rmain').textContent='Genève → Lyon · A40';
+  $('wx1').textContent='☀ 17°C';
+  $('wx2').textContent='A40 · km 28';
+  $('spdLimit').textContent='110';
+  setSpeed(108);setAuth(80,18);
+
+  /* Fuel: autonomie insuffisante vs distance restante */
+  $('fuelFill').style.width='16%';$('fuelFill').style.background='var(--o)';
+  $('fuelKm').textContent='38 km';$('fuelKm').style.color='var(--o)';
+  $('fuelWarn').classList.add('show');/* distance restante : 185 km */
+
+  /* Station pill */
+  $('stName').textContent='Total Énergie';$('stPrice').textContent='1.84€/L';
+  $('stInfo').textContent='1.2 km · sur votre route';
+  show('stPill',true);
+
+  setNotif('IA · Carburant','var(--y)',
+    '⛽ Autonomie insuffisante — 38 km restants\nStation dans 1.2 km · 1.84€/L',
+    88,'var(--y)','rgba(255,224,96,.25)');
+
+  addBtns([
+    {label:'✓ M\'y guider',primary:true,
+     cb:()=>{show('stPill',false);$('fuelWarn').classList.remove('show');startRadar();},
+     resp:{color:'var(--g)',bg:'rgba(0,255,180,.08)',msg:'Navigation → Total. Sortie dans 900m.'}},
+    {label:'Ignorer',primary:false,
+     resp:{color:'var(--o)',bg:'rgba(255,153,64,.08)',msg:'⚠ Prochaine station : 28 km. Risque panne sèche.'}},
+  ],'var(--y)');
+
+  buildDots(2,0,'var(--y)');
+  /* simulate speed just over limit → radar appears */
+  setTimeout(()=>triggerSpeedAlert(),3000);
+}
+
+function triggerSpeedAlert(){
+  $('spdLimit').className='spd-limit over';
+  show('radar',true);
+  $('radarDist').textContent='800 m';
+  $('radarSub').textContent='Limite : 110 km/h · Vous : 108 km/h';
+  /* count down radar distance */
+  let dist=800;
+  radarIv=setInterval(()=>{
+    dist-=40;
+    $('radarDist').textContent=dist+' m';
+    if(dist<=0){clearInterval(radarIv);show('radar',false);$('spdLimit').className='spd-limit';}
+  },500);
+}
+
+function startRadar(){
+  /* already handled in triggerSpeedAlert, called again post-accept */
+}
+
+/* ════════════════════════════════════
+   UC 1 — MALAISE MÉDICAL
+════════════════════════════════════ */
+function loadUC1(){
+  resetScene();
+  ring('orange');
+  show('vitals',true);
+  $('rsub').textContent='itinéraire actif';
+  $('rmain').textContent='Genève → Lausanne · A1';
+  $('wx1').textContent='🌤 14°C';$('wx2').textContent='A1 · km 14';
+  $('spdLimit').textContent='120';$('spdLimit').className='spd-limit';
+  setSpeed(68);setAuth(15,83,'var(--o)');
+  $('fuelFill').style.width='55%';$('fuelFill').style.background='var(--g)';
+  $('fuelKm').textContent='138 km';$('fuelKm').style.color='var(--w)';
+  $('rl').className='road-l slow';
+
+  setNotif('IA · Médical','var(--o)',
+    '⚕ Signaux anormaux détectés\nÊtes-vous en état de conduire ?',
+    88,'var(--o)','rgba(255,153,64,.3)');
+
+  addBtns([
+    {label:'✓ Je vais bien',primary:true,
+     cb:()=>{clearAuto();ring('');setAuth(80,18);show('vitals',false);},
+     resp:{color:'var(--g)',bg:'rgba(0,255,180,.08)',msg:'✓ OK. Surveillance maintenue.'}},
+    {label:'🅿 Arrêt volontaire',primary:false,
+     cb:()=>{clearAuto();doGuidedStop();},
+     resp:{color:'var(--o)',bg:'rgba(255,153,64,.08)',msg:'↩ IA guide vers arrêt d\'urgence.'}},
+  ],'var(--o)');
+
+  /* 7s auto-timer → sans réponse */
+  startAutoTimer(7,'var(--o)','IA reprend dans','Aucune réponse détectée',doNoResponseTakeover);
+  buildDots(4,0,'var(--o)');
+}
+
+function startAutoTimer(secs,col,lbl,sub,cb){
+  clearTimeout(autoTimer);
+  $('cdLbl').textContent=lbl;$('cdLbl').style.color=col;
+  $('cdN').style.color=col;$('cdSub').textContent=sub;$('cdSub').style.color='var(--d)';
+  $('cd').style.borderColor=col;
+  show('cd',true);
+  let c=secs;$('cdN').textContent=c;
+  const tick=()=>{
+    c--;$('cdN').textContent=c;
+    if(c<=0){show('cd',false);cb();}
+    else{autoTimer=setTimeout(tick,1000);}
+  };
+  autoTimer=setTimeout(tick,1000);
+}
+
+function doGuidedStop(){
+  /* AI takes lead to guide to emergency lane */
+  ring('orange');setAuth(20,78,'var(--o)');
+  animSpeed(0,4000);$('rl').className='road-l slow';
+  setNotif('IA · Arrêt Guidé','var(--o)',
+    '↩ IA guide vers bande d\'urgence\nFeux de détresse activés',
+    95,'var(--o)','rgba(255,153,64,.4)');
+  addBtns([
+    {label:'✓ Arrêté',primary:true,
+     cb:()=>{ring('');$('rl').className='road-l stop';show('vitals',false);setAuth(60,38,'var(--b)');
+       setNotif('IA · Stable','var(--g)','Arrêt sécurisé. Repos conseillé.',96,'var(--g)','rgba(0,255,180,.2)');
+       addBtns([],'var(--g)');},
+     resp:{color:'var(--g)',bg:'rgba(0,255,180,.08)',msg:'✓ Position sécurisée.'}}
+  ],'var(--o)');
+  updDot(1,'var(--o)');
+}
+
+function doNoResponseTakeover(){
+  /* AI takes control */
+  ring('red');setAuth(5,93,'var(--r)');
+  animSpeed(18,3500);$('rl').className='road-l slow';
+  $('ws').classList.add('shaking');
+
+  setNotif('IA · Contrôle Total','var(--r)',
+    '🚨 Sans réponse — IA en contrôle\nRalentissement · Bande d\'urgence',
+    99,'var(--r)','rgba(255,64,96,.4)');
+
+  /* seat shake visual */
+  setTimeout(()=>{
+    /* Sound notification */
+    show('soundNotif',true);
+    addBtns([
+      {label:'✓ Je me réveille',primary:true,
+       cb:()=>{$('ws').classList.remove('shaking');show('soundNotif',false);ring('');setAuth(55,43,'var(--b)');animSpeed(35,2000);
+         setNotif('IA · Récupération','var(--g)','✓ Conscient. Transition retour.',96,'var(--g)','rgba(0,255,180,.2)');
+         addBtns([],'var(--g)');show('vitals',false);},
+       resp:{color:'var(--g)',bg:'rgba(0,255,180,.08)',msg:'✓ Contrôle progressif restitué.'}},
+    ],'var(--r)');
+    updDot(2,'var(--r)');
+
+    /* 10s timer → ambulance */
+    startAutoTimer(10,'var(--r)','Ambulance dans','Toujours aucune réponse',doAmbulance);
+  },2000);
+}
+
+function doAmbulance(){
+  $('ws').classList.remove('shaking');show('soundNotif',false);
+  animSpeed(0,3000);$('rl').className='road-l stop';
+  show('amb',true);updDot(3,'var(--r)');
+}
+
+$('ambCancel').onclick=()=>{
+  show('amb',false);ring('');setAuth(55,43,'var(--b)');
+  setNotif('IA · Récupération','var(--g)','✓ Conscient. Ambulance annulée.\nConsultation médicale conseillée.',96,'var(--g)','rgba(0,255,180,.2)');
+  addBtns([],'var(--g)');show('vitals',false);
+};
+
+/* ════════════════════════════════════
+   UC 2 — CONDUCTEUR DÉBUTANT
+════════════════════════════════════ */
+const SIGNS=[
+  {icon:'🔴',title:'Priorité à droite',
+   desc:'Tout véhicule venant de droite est prioritaire.',
+   tip:'Regardez toujours à droite avant d\'engager.',
+   sim:'intersection', /* type de simulation */
+   color:'var(--b)',msg:'Priorité à droite — véhicule approche\nCédez avant d\'avancer.',conf:93,
+   actions:[{label:'✓ Je cède',primary:true},{label:'Rappel ?',primary:false,info:'Règle nationale : priorité à droite sauf si la route est marquée "route prioritaire".'}]},
+
+  {icon:'🛑',title:'Stop — Arrêt total',
+   desc:'Arrêt COMPLET obligatoire même si la voie est libre.',
+   tip:'La roue doit s\'immobiliser complètement.',
+   sim:'stop',
+   color:'var(--r)',msg:'STOP détecté — arrêtez complètement\nTolérance zéro.',conf:97,
+   actions:[{label:'✓ J\'arrête',primary:true},{label:'Pourquoi ?',primary:false,info:'Un arrêt partiel = infraction. Points de permis perdus.'}]},
+
+  {icon:'🚸',title:'Zone scolaire',
+   desc:'Enfants possibles. 30 km/h max.',
+   tip:'Ralentissez et soyez prêt à freiner.',
+   sim:'slow',
+   color:'var(--y)',msg:'Zone scolaire — 30 km/h\nEnfants possibles.',conf:91,
+   actions:[{label:'✓ Je ralentis',primary:true},{label:'Durée ?',primary:false,info:'La zone dure jusqu\'au prochain panneau de fin (barré).'}]},
+
+  {icon:'⛔',title:'Sens interdit',
+   desc:'Vous ne pouvez pas entrer dans cette voie.',
+   tip:'Faites demi-tour à la prochaine occasion sûre.',
+   sim:'stop',
+   color:'var(--r)',msg:'Sens interdit détecté — demi-tour requis\nN\'engagez pas.',conf:99,
+   actions:[{label:'✓ Demi-tour',primary:true}]},
+
+  {icon:'⚠️',title:'Virage dangereux',
+   desc:'Forte courbe. Réduisez la vitesse avant le virage.',
+   tip:'Freinez AVANT, accélérez DANS le virage.',
+   sim:'curve',
+   color:'var(--o)',msg:'Virage dangereux — réduire maintenant\nFreinez avant la courbe.',conf:88,
+   actions:[{label:'✓ Je ralentis',primary:true},{label:'Technique ?',primary:false,info:'Technique de base : Freinage → Relâchement → Accélération progressive dans la courbe.'}]},
+
+  {icon:'🚦',title:'Feu orange — décision',
+   desc:'Orange = ralentir si possible. Pas accélérer.',
+   tip:'Si vous ne pouvez pas vous arrêter → passez. Sinon → stop.',
+   sim:'trafficlight',
+   color:'var(--y)',msg:'Feu orange — pouvez-vous vous arrêter ?\nChoisissez maintenant.',conf:86,
+   actions:[{label:'✓ J\'arrête',primary:true},{label:'Trop tard',primary:false,resp:{color:'var(--o)',bg:'rgba(255,153,64,.08)',msg:'⚠ Passage accepté. En cas de doute, toujours préférer l\'arrêt.'}}]},
+
+  {icon:'🚧',title:'Travaux — alternance',
+   desc:'Une voie alternée. Attendez le signal ou guidage.',
+   tip:'Ne forcez pas le passage. Respectez les signaleurs.',
+   sim:'slow',
+   color:'var(--o)',msg:'Travaux — alternance voie unique\nAttendez votre tour.',conf:92,
+   actions:[{label:'✓ J\'attends',primary:true}]},
+];
+
+let novStep=0,simIv=null;
+function loadUC2(){
+  resetScene();
+  $('rsub').textContent='mode apprenti';
+  $('rmain').textContent='Meyrin → Genève Centre';
+  $('wx1').textContent='🌤 16°C';$('wx2').textContent='Route cantonale';
+  $('spdLimit').textContent='50';$('spdLimit').className='spd-limit';
+  setSpeed(48);setAuth(72,26);
+  $('fuelFill').style.width='65%';$('fuelFill').style.background='var(--g)';
+  $('fuelKm').textContent='163 km';$('fuelKm').style.color='var(--w)';
+  novStep=0;applySign();
+  buildDots(SIGNS.length,0,'var(--b)');
+}
+
+function applySign(){
+  const s=SIGNS[novStep];
+  $('signIcon').textContent=s.icon;$('signTitle').textContent=s.title;$('signDesc').textContent=s.desc;
+  show('signCard',true);
+  runSimulation(s.sim,s.color);
+  setNotif('IA · Débutant',s.color,s.msg,s.conf,s.color,s.color.replace(')',', .25)').replace('var(','rgba('));
+  /* fix color for border */
+  $('notif').style.borderColor='rgba(255,255,255,.2)';
+
+  const acts=s.actions.map(a=>({
+    label:a.label,primary:a.primary,
+    resp:a.resp||{color:'var(--g)',bg:'rgba(0,255,180,.08)',msg:a.info||'✓ Bonne décision. Continuez.'},
+    cb:a.primary?()=>{
+      clearSimulation();
+      novStep++;
+      if(novStep<SIGNS.length){setTimeout(()=>{applySign();updDot(novStep,'var(--b)');},1100);}
+      else{
+        setTimeout(()=>{
+          show('signCard',false);
+          setNotif('IA · Bilan','var(--g)',
+            `✓ ${SIGNS.length} situations maîtrisées\nProgression : Excellent`,97,'var(--g)','rgba(0,255,180,.2)');
+          addBtns([],'var(--g)');
+        },1000);
+      }
+    }:undefined
+  }));
+  addBtns(acts,s.color);
+  updDot(novStep,'var(--b)');
+}
+
+function runSimulation(type,col){
+  clearSimulation();
+  const rl=$('rl');
+  if(type==='stop'){
+    /* animate stopping: speed decreases */
+    animSpeed(0,2000);rl.className='road-l slow';
+    simIv=setTimeout(()=>{rl.className='road-l stop';},2200);
+  } else if(type==='slow'){
+    animSpeed(28,1500);rl.className='road-l slow';
+  } else if(type==='curve'){
+    /* slight shake = curve feel */
+    $('ws').style.transform='rotate(-1.5deg)';
+    simIv=setTimeout(()=>{$('ws').style.transform='rotate(0deg)';},2000);
+  } else if(type==='intersection'){
+    /* pulse ring briefly */
+    ring('');setTimeout(()=>ring('ice'),300);setTimeout(()=>ring(''),2500);
+  } else if(type==='trafficlight'){
+    /* flash yellow */
+    ring('');
+    let on=true;
+    simIv=setInterval(()=>{ring(on?'orange':'');on=!on;},600);
+    setTimeout(()=>{clearInterval(simIv);ring('');},3000);
+  }
+}
+function clearSimulation(){
+  clearTimeout(simIv);clearInterval(simIv);
+  $('ws').style.transform='';
+  animSpeed(48,800);$('rl').className='road-l';
+}
+
+/* ════════════════════════════════════
+   UC 3 — AVALANCHE ALPINE
+════════════════════════════════════ */
+const ASTEPS=[
+  {lbl:'Détection',col:'var(--ice)',ring:'ice',speed:54,h:75,a:23,hc:'var(--ice)',
+   label:'IA · Environnement',msg:'⛰ Risque avalanche modéré\nRéduire à 40 km/h ?',conf:82,
+   wxT:'-8°C',wxV:'420m',wxW:'62 km/h',wxA:'MODÉRÉ',
+   wxTc:'var(--ice)',wxVc:'var(--ice)',wxWc:'var(--y)',wxAc:'var(--y)',snow:20,bliz:false,
+   acts:[{label:'✓ Réduire',primary:true,cb:()=>{animSpeed(40);setTimeout(()=>goStep(1),1600);}},
+         {label:'Continuer',primary:false,cb:()=>setTimeout(()=>goStep(1),1600)}]},
+  {lbl:'Collaboration',col:'var(--y)',ring:'ice',speed:38,h:58,a:40,hc:'var(--y)',
+   label:'IA · Confirmation',msg:'⚠ Conditions critiques\nRefuge à 1.2 km — arrêt conseillé ?',conf:91,
+   wxT:'-14°C',wxV:'90m',wxW:'94 km/h',wxA:'ÉLEVÉ',
+   wxTc:'var(--r)',wxVc:'var(--r)',wxWc:'var(--r)',wxAc:'var(--y)',snow:50,bliz:false,
+   acts:[{label:'✓ Cap refuge',primary:true,cb:()=>{animSpeed(22);setTimeout(()=>goStep(2),1800);}},
+         {label:'Continuer',primary:false,cb:()=>setTimeout(()=>goStep(2),1800)}]},
+  {lbl:'Contrôle IA',col:'var(--r)',ring:'red',speed:18,h:5,a:93,hc:'var(--r)',
+   label:'IA · Urgence',msg:'🚨 AVALANCHE — IA en contrôle\nNe pas toucher le volant.',conf:99,
+   wxT:'-14°C',wxV:'30m',wxW:'122 km/h',wxA:'CRITIQUE',
+   wxTc:'var(--r)',wxVc:'var(--r)',wxWc:'var(--r)',wxAc:'var(--r)',snow:80,bliz:true,
+   acts:[{label:'↩ Override (refusé)',primary:false,
+     resp:{color:'var(--r)',bg:'rgba(255,64,96,.1)',msg:'⚠ Refusé — manœuvre vitale.'},
+     cb:()=>setTimeout(()=>goStep(3),2000)}]},
+  {lbl:'Récupération',col:'var(--g)',ring:'',speed:0,h:60,a:38,hc:'var(--g)',
+   label:'IA · Récupération',msg:'✓ Tunnel abri atteint\nReprenez le contrôle.',conf:97,
+   wxT:'-14°C',wxV:'Tunnel',wxW:'—',wxA:'PASSÉE',
+   wxTc:'var(--d)',wxVc:'var(--g)',wxWc:'var(--d)',wxAc:'var(--g)',snow:0,bliz:false,
+   acts:[{label:'✓ Reprendre',primary:true,resp:{color:'var(--g)',bg:'rgba(0,255,180,.08)',msg:'✓ Contrôle manuel actif.'}},
+         {label:'📋 Rapport',primary:false,resp:{color:'var(--b)',bg:'rgba(64,208,255,.08)',msg:'IA active 4min12s · Tunnel atteint · Aucune blessure.'}}]},
+];
+let curStep=0;
+function loadUC3(){
+  resetScene();show('mts',true);show('alp',true);show('wxStrip',true);show('stepNav',true);
+  $('rsub').textContent='secteur alpin';$('rmain').textContent='Col du Grand-St-Bernard';
+  $('spdLimit').textContent='60';$('spdLimit').className='spd-limit';
+  $('fuelFill').style.width='60%';$('fuelFill').style.background='var(--g)';
+  $('fuelKm').textContent='150 km';$('fuelKm').style.color='var(--w)';
+  curStep=0;applyAlpStep();buildDots(4,0,'var(--ice)');
+}
+function goStep(i){curStep=i;applyAlpStep();document.querySelectorAll('.sn').forEach((el,idx)=>el.classList.toggle('active',idx===i));}
+function applyAlpStep(){
+  const s=ASTEPS[curStep];
+  ring(s.ring);setSpeed(s.speed,s.ring==='red'?'var(--r)':'var(--w)');
+  setAuth(s.h,s.a,s.hc);
+  setNotif(s.label,s.col,s.msg,s.conf,s.col,'rgba(255,255,255,.14)');
+  $('notif').style.borderColor=s.col+'44';
+  ['wxT','wxV','wxW','wxA'].forEach((id,i)=>{
+    const vals=[s.wxT,s.wxV,s.wxW,s.wxA];const cols=[s.wxTc,s.wxVc,s.wxWc,s.wxAc];
+    $(id).textContent=vals[i];$(id).style.color=cols[i];
+  });
+  $('wx1').textContent=`❄ ${s.wxT}`;$('wx2').textContent=`Col · ${s.wxV}`;
+  if(s.snow>0){makeSnow(s.snow);show('snow',true);}else{show('snow',false);}
+  show('blizzard',s.bliz);
+  $('rl').className=s.speed===0?'road-l stop':s.speed<35?'road-l slow':'road-l';
+  addBtns(s.acts,s.col);updDot(curStep,'var(--ice)');
+}
+
+/* ════ UC LOADER ════ */
+let curUC=-1;
+function loadUC(i){
+  if(i===curUC)return;curUC=i;
+  document.querySelectorAll('.ucb').forEach((b,idx)=>b.classList.toggle('active',idx===i));
+  [loadUC0,loadUC1,loadUC2,loadUC3][i]();
+}
+
+setInterval(()=>$('clk').textContent=getTime(),12000);
+$('clk').textContent=getTime();
+loadUC(0);
+</script>
+</body>
+</html>
