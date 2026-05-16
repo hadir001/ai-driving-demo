@@ -88,7 +88,7 @@ body{background:#000;font-family:'Exo 2',sans-serif;height:100vh;display:flex;fl
 .hud *{pointer-events:auto}
 
 /* ── TOP STRIP ── */
-.top{position:absolute;top:16px;left:5%;right:5%;display:flex;align-items:flex-start;justify-content:space-between;pointer-events:none}
+.top{position:absolute;top:36px;left:5%;right:5%;display:flex;align-items:flex-start;justify-content:space-between;pointer-events:none}
 .clock{font-family:'DM Mono',monospace;font-size:12px;font-weight:300;color:var(--d);letter-spacing:.2em}
 .route-ctr{display:flex;flex-direction:column;align-items:center;gap:3px}
 .route-sub{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.18em;color:var(--d);text-transform:uppercase}
@@ -96,7 +96,7 @@ body{background:#000;font-family:'Exo 2',sans-serif;height:100vh;display:flex;fl
 .wx-top{font-family:'DM Mono',monospace;font-size:11px;color:var(--d);text-align:right;display:flex;flex-direction:column;gap:2px}
 
 /* ── SPEED (bottom-left) ── */
-.spd-cluster{position:absolute;bottom:17%;left:5%;display:flex;flex-direction:column;align-items:flex-start;gap:0}
+.spd-cluster{position:absolute;bottom:17%;left:13%;display:flex;flex-direction:column;align-items:flex-start;gap:0}
 .spd-num{font-size:68px;font-weight:800;line-height:1;color:var(--w);letter-spacing:-.02em;transition:color .3s}
 .spd-unit{font-family:'DM Mono',monospace;font-size:10px;color:var(--d);letter-spacing:.2em;margin-top:-2px}
 .spd-limit{width:38px;height:38px;border-radius:50%;border:2.5px solid var(--w);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--w);margin-top:6px;transition:border-color .3s,color .3s,background .3s}
@@ -104,7 +104,7 @@ body{background:#000;font-family:'Exo 2',sans-serif;height:100vh;display:flex;fl
 @keyframes limitFlash{0%,100%{background:rgba(255,64,96,.15)}50%{background:rgba(255,64,96,.35)}}
 
 /* ── RADAR ALERT ── */
-.radar{position:absolute;bottom:calc(17% + 90px);left:5%;
+.radar{position:absolute;bottom:calc(17% + 90px);left:13%;
   background:rgba(6,12,24,.8);border:1px solid rgba(255,64,96,.4);border-radius:10px;
   padding:7px 12px;display:none;animation:slideU .3s ease;flex-direction:column;gap:3px}
 .radar.show{display:flex}
@@ -120,7 +120,7 @@ body{background:#000;font-family:'Exo 2',sans-serif;height:100vh;display:flex;fl
 .arr-d{font-family:'DM Mono',monospace;font-size:10px;color:var(--b);letter-spacing:.1em}
 
 /* ── FUEL (bottom-right) ── */
-.fuel-ctr{position:absolute;bottom:17%;right:5%;display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+.fuel-ctr{position:absolute;bottom:17%;right:13%;display:flex;flex-direction:column;align-items:flex-end;gap:5px}
 .fuel-lbl{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:var(--d)}
 .fuel-bar{width:78px;height:4px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden}
 .fuel-fill{height:100%;border-radius:2px;transition:width 1.5s,background .5s}
@@ -139,7 +139,7 @@ body{background:#000;font-family:'Exo 2',sans-serif;height:100vh;display:flex;fl
    Minimal, corners only — never blocking road view */
 
 /* ── STATION PILL (top-right corner) ── */
-.station-pill{position:absolute;top:68px;right:5%;
+.station-pill{position:absolute;top:68px;right:13%;
   background:rgba(6,14,24,.82);border:1px solid rgba(255,224,96,.3);border-radius:12px;
   padding:10px 14px;backdrop-filter:blur(10px);display:none;animation:fadeR .35s ease;min-width:170px}
 .station-pill.show{display:block}
@@ -151,7 +151,7 @@ body{background:#000;font-family:'Exo 2',sans-serif;height:100vh;display:flex;fl
 .sp-info{font-family:'DM Mono',monospace;font-size:9px;color:var(--d);margin-top:3px}
 
 /* ── SIGN POPUP (top-left corner) ── */
-.sign-card{position:absolute;top:68px;left:5%;
+.sign-card{position:absolute;top:68px;left:13%;
   background:rgba(6,14,24,.82);border:1px solid rgba(64,208,255,.22);border-radius:12px;
   padding:10px 14px;backdrop-filter:blur(10px);display:none;animation:fadeL .35s ease;min-width:160px;max-width:200px}
 .sign-card.show{display:block}
@@ -162,7 +162,7 @@ body{background:#000;font-family:'Exo 2',sans-serif;height:100vh;display:flex;fl
 .sign-desc{font-size:10px;color:var(--d);line-height:1.5;font-weight:300}
 
 /* ── VITALS STRIP (left side, medical) ── */
-.vitals{position:absolute;top:68px;left:5%;display:none;flex-direction:column;gap:5px}
+.vitals{position:absolute;top:68px;left:13%;display:none;flex-direction:column;gap:5px}
 .vitals.show{display:flex}
 .vrow{display:flex;align-items:center;gap:8px;font-family:'DM Mono',monospace;font-size:9px;color:var(--d)}
 .vk{font-size:8px;letter-spacing:.1em;text-transform:uppercase;width:62px}
@@ -171,7 +171,7 @@ body{background:#000;font-family:'Exo 2',sans-serif;height:100vh;display:flex;fl
 .vbf{height:100%;border-radius:1px;transition:width .8s,background .5s}
 
 /* ── WEATHER STRIP (right side, alpine) ── */
-.wx-strip{position:absolute;top:68px;right:5%;display:none;flex-direction:column;gap:5px;align-items:flex-end}
+.wx-strip{position:absolute;top:68px;right:13%;display:none;flex-direction:column;gap:5px;align-items:flex-end}
 .wx-strip.show{display:flex}
 .wxrow{font-family:'DM Mono',monospace;font-size:9px;color:var(--d);display:flex;align-items:center;gap:6px}
 .wxk{font-size:8px;letter-spacing:.1em;text-transform:uppercase;opacity:.5}
@@ -238,7 +238,7 @@ body{background:#000;font-family:'Exo 2',sans-serif;height:100vh;display:flex;fl
 .amb-cancel:hover{filter:brightness(1.1);transform:translateY(-2px)}
 
 /* ══ STEP NAV (alpine) ══ */
-.step-nav{position:absolute;bottom:calc(17% - 22px - 26px);right:5%;display:none;gap:5px}
+.step-nav{position:absolute;bottom:calc(17% - 22px - 26px);right:13%;display:none;gap:5px}
 .step-nav.show{display:flex}
 .sn{padding:5px 11px;border-radius:7px;font-family:'DM Mono',monospace;font-size:9px;cursor:pointer;
   border:1px solid rgba(255,255,255,.12);background:rgba(6,12,24,.65);color:var(--d);transition:all .2s}
@@ -251,6 +251,14 @@ body{background:#000;font-family:'Exo 2',sans-serif;height:100vh;display:flex;fl
 .ucb:hover{color:rgba(255,255,255,.6)}
 .ucb.active{color:var(--w);border-top-color:var(--uc,var(--g))}
 .ucb-icon{font-size:17px}
+
+
+/* ── SCHOOL SVG ILLUSTRATION ── */
+.school-scene{
+  display:none;width:100%;height:80px;margin:6px 0 4px;
+  border-radius:8px;overflow:hidden;
+}
+.school-scene.visible{display:block}
 
 /* ── step dots ── */
 .dots{position:absolute;bottom:calc(9% + 44px);left:50%;transform:translateX(-50%);display:none;gap:7px;align-items:center}
@@ -322,6 +330,56 @@ body{background:#000;font-family:'Exo 2',sans-serif;height:100vh;display:flex;fl
       <div class="sign-tag">Panneau détecté</div>
       <div class="sign-title" id="signTitle">—</div>
       <div class="sign-desc" id="signDesc">—</div>
+      <!-- SCHOOL SVG (shown for school zone sign) -->
+      <div class="school-scene" id="schoolScene">
+        <svg viewBox="0 0 200 80" xmlns="http://www.w3.org/2000/svg" width="100%" height="80">
+          <!-- sky -->
+          <rect width="200" height="80" fill="#0a1428"/>
+          <!-- road -->
+          <rect x="0" y="60" width="200" height="20" fill="#0d1520"/>
+          <rect x="90" y="63" width="20" height="4" fill="rgba(255,225,60,.4)" rx="1"/>
+          <!-- building body -->
+          <rect x="20" y="28" width="80" height="35" fill="#12233a" rx="2"/>
+          <!-- roof -->
+          <polygon points="10,30 60,10 110,30" fill="#0e1c30"/>
+          <!-- flag -->
+          <rect x="55" y="4" width="1.5" height="10" fill="#8a94b8"/>
+          <polygon points="57,4 67,7 57,10" fill="#ff4060"/>
+          <!-- windows -->
+          <rect x="28" y="35" width="12" height="10" fill="#1a3a60" rx="1"/>
+          <rect x="46" y="35" width="12" height="10" fill="#1a3a60" rx="1"/>
+          <rect x="64" y="35" width="12" height="10" fill="#ffe06044" rx="1"/>
+          <rect x="82" y="35" width="12" height="10" fill="#1a3a60" rx="1"/>
+          <!-- door -->
+          <rect x="50" y="48" width="14" height="15" fill="#0a1428" rx="1"/>
+          <!-- sign post -->
+          <rect x="115" y="32" width="2" height="28" fill="#3a4a5a"/>
+          <!-- sign panel -->
+          <rect x="105" y="20" width="38" height="18" fill="#ffe060" rx="3"/>
+          <text x="124" y="32" text-anchor="middle" font-size="8" font-family="sans-serif" fill="#000" font-weight="bold">ÉCOLE</text>
+          <!-- child figure 1 -->
+          <circle cx="148" cy="48" r="4" fill="#40d0ff"/>
+          <rect x="146" y="52" width="4" height="8" fill="#40d0ff" rx="1"/>
+          <line x1="144" y1="55" x2="148" y2="57" stroke="#40d0ff" stroke-width="1.5"/>
+          <line x1="152" y1="55" x2="148" y2="57" stroke="#40d0ff" stroke-width="1.5"/>
+          <line x1="147" y1="60" x2="145" y2="66" stroke="#40d0ff" stroke-width="1.5"/>
+          <line x1="149" y1="60" x2="151" y2="66" stroke="#40d0ff" stroke-width="1.5"/>
+          <!-- child figure 2 -->
+          <circle cx="163" cy="49" r="3.5" fill="#00e5a0"/>
+          <rect x="161" y="53" width="4" height="7" fill="#00e5a0" rx="1"/>
+          <line x1="159" y1="55" x2="163" y2="57" stroke="#00e5a0" stroke-width="1.5"/>
+          <line x1="167" y1="55" x2="163" y2="57" stroke="#00e5a0" stroke-width="1.5"/>
+          <line x1="162" y1="60" x2="160" y2="66" stroke="#00e5a0" stroke-width="1.5"/>
+          <line x1="164" y1="60" x2="166" y2="66" stroke="#00e5a0" stroke-width="1.5"/>
+          <!-- trees -->
+          <rect x="175" y="50" width="3" height="12" fill="#1e3a2a"/>
+          <ellipse cx="176" cy="47" rx="6" ry="8" fill="#0e2a1a"/>
+          <rect x="8" y="52" width="3" height="10" fill="#1e3a2a"/>
+          <ellipse cx="9" cy="49" rx="5" ry="7" fill="#0e2a1a"/>
+          <!-- glow on school -->
+          <rect x="20" y="28" width="80" height="35" fill="rgba(255,224,96,0.03)" rx="2"/>
+        </svg>
+      </div>
     </div>
 
     <!-- WEATHER STRIP (top-right, alpine) -->
@@ -498,7 +556,7 @@ function clearAuto(){clearTimeout(autoTimer);clearTimeout(cdTimer);}
 
 /* ════ RESET SCENE ════ */
 function resetScene(){
-  ring('');clearAuto();
+  ring('');clearAuto();clearTimeout(radarTimeout);clearInterval(radarIv);
   show('vitals',false);show('wxStrip',false);show('mts',false);
   show('snow',false);show('blizzard',false);show('alp',false);
   show('stPill',false);show('signCard',false);show('amb',false);
@@ -515,7 +573,7 @@ function resetScene(){
 /* ════════════════════════════════════
    UC 0 — CARBURANT
 ════════════════════════════════════ */
-let radarActive=false,radarDist=800,radarIv=null;
+let radarActive=false,radarDist=800,radarIv=null,radarTimeout=null;
 
 function loadUC0(){
   resetScene();
@@ -550,7 +608,7 @@ function loadUC0(){
 
   buildDots(2,0,'var(--y)');
   /* simulate speed just over limit → radar appears */
-  setTimeout(()=>triggerSpeedAlert(),3000);
+  radarTimeout=setTimeout(()=>triggerSpeedAlert(),3000);
 }
 
 function triggerSpeedAlert(){
@@ -681,54 +739,61 @@ $('ambCancel').onclick=()=>{
    UC 2 — CONDUCTEUR DÉBUTANT
 ════════════════════════════════════ */
 const SIGNS=[
-  {icon:'🔴',title:'Priorité à droite',
-   desc:'Tout véhicule venant de droite est prioritaire.',
-   tip:'Regardez toujours à droite avant d\'engager.',
-   sim:'intersection', /* type de simulation */
-   color:'var(--b)',msg:'Priorité à droite — véhicule approche\nCédez avant d\'avancer.',conf:93,
-   actions:[{label:'✓ Je cède',primary:true},{label:'Rappel ?',primary:false,info:'Règle nationale : priorité à droite sauf si la route est marquée "route prioritaire".'}]},
+  {icon:'🏫',title:'Zone scolaire',
+   desc:'30 km/h · enfants jusqu\'à 150m',
+   tip:'Même hors des heures scolaires.',
+   sim:'slow', svgIllustration: true,
+   color:'var(--y)',msg:'Zone scolaire — 30 km/h\nEnfants à tout moment.',conf:91,
+   actions:[{label:'✓ Je ralentis',primary:true},{label:'Toujours ?',primary:false,info:'Oui — le panneau reste actif 24h/24, même le week-end.'}]},
 
-  {icon:'🛑',title:'Stop — Arrêt total',
-   desc:'Arrêt COMPLET obligatoire même si la voie est libre.',
-   tip:'La roue doit s\'immobiliser complètement.',
-   sim:'stop',
-   color:'var(--r)',msg:'STOP détecté — arrêtez complètement\nTolérance zéro.',conf:97,
-   actions:[{label:'✓ J\'arrête',primary:true},{label:'Pourquoi ?',primary:false,info:'Un arrêt partiel = infraction. Points de permis perdus.'}]},
+  {icon:'🚏',title:'Cédez le passage en lacet',
+   desc:'Sur route de montagne : vous cédez à celui qui monte.',
+   tip:'Le véhicule montant est toujours prioritaire.',
+   sim:'intersection',
+   color:'var(--b)',msg:'Route étroite — voie montante prioritaire\nReculez ou attendez.',conf:89,
+   actions:[{label:'✓ Je cède',primary:true},{label:'Pourquoi ?',primary:false,info:'Le conducteur montant a moins de visibilité et plus de difficultés à manœuvrer.'}]},
 
-  {icon:'🚸',title:'Zone scolaire',
-   desc:'Enfants possibles. 30 km/h max.',
-   tip:'Ralentissez et soyez prêt à freiner.',
+  {icon:'🚛',title:'Interdit aux poids lourds',
+   desc:'> 3.5 t : accès interdit sauf riverains.',
+   tip:'Ne concerne pas les voitures — mais important à reconnaître.',
    sim:'slow',
-   color:'var(--y)',msg:'Zone scolaire — 30 km/h\nEnfants possibles.',conf:91,
-   actions:[{label:'✓ Je ralentis',primary:true},{label:'Durée ?',primary:false,info:'La zone dure jusqu\'au prochain panneau de fin (barré).'}]},
+   color:'var(--b)',msg:'Accès interdit PL dès 3.5t\nVoiture : passage autorisé.',conf:94,
+   actions:[{label:'✓ Compris',primary:true},{label:'Toujours ?',primary:false,info:'Sauf mention "riverains autorisés". Vérifiez le panneau additionnel.'}]},
 
-  {icon:'⛔',title:'Sens interdit',
-   desc:'Vous ne pouvez pas entrer dans cette voie.',
-   tip:'Faites demi-tour à la prochaine occasion sûre.',
+  {icon:'🔵',title:'Sens obligatoire',
+   desc:'Vous DEVEZ prendre la direction indiquée.',
+   tip:'Différent du sens interdit — ici la direction est forcée.',
+   sim:'intersection',
+   color:'var(--b)',msg:'Sens obligatoire — suivez la flèche\nPas de choix possible.',conf:96,
+   actions:[{label:'✓ Je suis',primary:true},{label:'Différence ?',primary:false,info:'Sens interdit = ne pas entrer. Sens obligatoire = vous devez aller dans ce sens une fois entré.'}]},
+
+  {icon:'📏',title:'Hauteur limitée',
+   desc:'Passage limité (ex: 2m). Calculez AVANT.',
+   tip:'Si doute : faites demi-tour. Impossible à reculer ensuite.',
    sim:'stop',
-   color:'var(--r)',msg:'Sens interdit détecté — demi-tour requis\nN\'engagez pas.',conf:99,
-   actions:[{label:'✓ Demi-tour',primary:true}]},
+   color:'var(--o)',msg:'Hauteur limite détectée en aval\nVotre véhicule : OK',conf:97,
+   actions:[{label:'✓ Je passe',primary:true},{label:'Si dépassé ?',primary:false,info:'Demi-tour obligatoire. Tenter de passer = dégâts assurés + amende.'}]},
 
-  {icon:'⚠️',title:'Virage dangereux',
-   desc:'Forte courbe. Réduisez la vitesse avant le virage.',
-   tip:'Freinez AVANT, accélérez DANS le virage.',
+  {icon:'🌊',title:'Risque inondation',
+   desc:'Route submersible. 30cm = voiture emportée.',
+   tip:'Ne jamais traverser une route inondée même légèrement.',
+   sim:'slow',
+   color:'var(--o)',msg:'Route submersible détectée\n30cm = danger vital.',conf:85,
+   actions:[{label:'✓ Je rebrousse',primary:true},{label:'Vraiment ?',primary:false,info:'50% des noyades en voiture surviennent sur route apparemment peu profonde. Toujours rebrousser.'}]},
+
+  {icon:'🔔',title:'Avertisseur sonore obligatoire',
+   desc:'Rare en France/CH — tunnel ou virage sans visibilité.',
+   tip:'Klaxonnez AVANT le virage, pas après.',
    sim:'curve',
-   color:'var(--o)',msg:'Virage dangereux — réduire maintenant\nFreinez avant la courbe.',conf:88,
-   actions:[{label:'✓ Je ralentis',primary:true},{label:'Technique ?',primary:false,info:'Technique de base : Freinage → Relâchement → Accélération progressive dans la courbe.'}]},
+   color:'var(--b)',msg:'Klaxon obligatoire — virage aveugle\nSignalez votre présence.',conf:88,
+   actions:[{label:'✓ Je klaxonne',primary:true},{label:'Où ?',primary:false,info:'Surtout dans les Alpes et tunnels. Indique un virage où deux voitures ne peuvent pas se voir.'}]},
 
-  {icon:'🚦',title:'Feu orange — décision',
-   desc:'Orange = ralentir si possible. Pas accélérer.',
-   tip:'Si vous ne pouvez pas vous arrêter → passez. Sinon → stop.',
-   sim:'trafficlight',
-   color:'var(--y)',msg:'Feu orange — pouvez-vous vous arrêter ?\nChoisissez maintenant.',conf:86,
-   actions:[{label:'✓ J\'arrête',primary:true},{label:'Trop tard',primary:false,resp:{color:'var(--o)',bg:'rgba(255,153,64,.08)',msg:'⚠ Passage accepté. En cas de doute, toujours préférer l\'arrêt.'}}]},
-
-  {icon:'🚧',title:'Travaux — alternance',
-   desc:'Une voie alternée. Attendez le signal ou guidage.',
-   tip:'Ne forcez pas le passage. Respectez les signaleurs.',
+  {icon:'🚗💨',title:'Chaussée glissante',
+   desc:'Pas seulement en hiver. Huile, feuilles, verglas.',
+   tip:'Doublez la distance de freinage. Zéro freinage brusque.',
    sim:'slow',
-   color:'var(--o)',msg:'Travaux — alternance voie unique\nAttendez votre tour.',conf:92,
-   actions:[{label:'✓ J\'attends',primary:true}]},
+   color:'var(--ice)',msg:'Chaussée glissante signalée\nDouble distance de freinage.',conf:90,
+   actions:[{label:'✓ Je ralentis',primary:true},{label:'Pourquoi ?',primary:false,info:'La distance de freinage double à 80 km/h sur route mouillée. Sur verglas : x10.'}]},
 ];
 
 let novStep=0,simIv=null;
@@ -748,6 +813,7 @@ function loadUC2(){
 function applySign(){
   const s=SIGNS[novStep];
   $('signIcon').textContent=s.icon;$('signTitle').textContent=s.title;$('signDesc').textContent=s.desc;
+  const sc=$('schoolScene');sc.classList.toggle('visible',!!s.svgIllustration);
   show('signCard',true);
   runSimulation(s.sim,s.color);
   setNotif('IA · Débutant',s.color,s.msg,s.conf,s.color,s.color.replace(')',', .25)').replace('var(','rgba('));
