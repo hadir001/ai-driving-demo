@@ -316,6 +316,90 @@ body{background:#000;font-family:'Exo 2',sans-serif;height:100vh;display:flex;fl
 .ucb:hover{color:rgba(255,255,255,.6)}
 .ucb.active{color:var(--w);border-top-color:var(--uc,var(--g))}
 .ucb-icon{font-size:17px}
+
+
+/* ══ UC5 INFRARED NIGHT ══ */
+/* Small IR camera box — left-center, 20% width */
+.ir-box-wrap{
+  position:absolute;
+  top:50%;left:14%;
+  transform:translateY(-50%);
+  width:22%;
+  aspect-ratio:4/3;
+  border-radius:10px;
+  overflow:hidden;
+  border:1px solid rgba(0,255,80,.45);
+  box-shadow:0 0 20px rgba(0,255,80,.15),0 0 60px rgba(0,0,0,.6);
+  display:none;
+  z-index:8;
+}
+.ir-box-wrap.show{display:block;animation:irBoxIn .4s ease}
+@keyframes irBoxIn{from{opacity:0;transform:translateY(-50%) scale(.92)}to{opacity:1;transform:translateY(-50%) scale(1)}}
+
+/* IR background inside box */
+.ir-box-bg{
+  position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 55%,rgba(0,10,2,.9) 0%,rgba(0,5,1,.97) 100%);
+}
+.ir-box-bg::after{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(180deg,transparent 0,transparent 2px,rgba(0,0,0,.18) 2px,rgba(0,0,0,.18) 3px);
+  pointer-events:none;
+}
+
+/* Header bar of IR box */
+.ir-box-header{
+  position:absolute;top:0;left:0;right:0;
+  padding:4px 8px;
+  background:rgba(0,12,3,.85);
+  border-bottom:1px solid rgba(0,255,80,.2);
+  display:flex;align-items:center;justify-content:space-between;
+  z-index:2;
+}
+.ir-box-title{
+  font-family:'DM Mono',monospace;font-size:7px;letter-spacing:.18em;
+  text-transform:uppercase;color:rgba(0,255,80,.7);
+  display:flex;align-items:center;gap:5px;
+}
+.ir-box-dot{width:5px;height:5px;border-radius:50%;background:#00ff50;
+  animation:irDot 1s ease-in-out infinite}
+@keyframes irDot{0%,100%{opacity:1}50%{opacity:.25}}
+.ir-box-time{font-family:'DM Mono',monospace;font-size:7px;color:rgba(0,255,80,.4)}
+
+/* SVG fills the box */
+.ir-box-svg{position:absolute;inset:0;top:20px;width:100%;height:calc(100% - 20px)}
+
+/* detection marker inside IR box */
+.ir-det{
+  position:absolute;border:1.5px solid #ff4400;border-radius:3px;
+  opacity:0;transition:opacity .4s;pointer-events:none;z-index:12;
+}
+.ir-det.show{opacity:1;animation:irDetAnim .65s ease-in-out infinite}
+@keyframes irDetAnim{
+  0%,100%{border-color:#ff4400;box-shadow:0 0 6px rgba(255,68,0,.7)}
+  50%{border-color:#ff9900;box-shadow:0 0 16px rgba(255,150,0,1)}
+}
+.ir-det-lbl{
+  position:absolute;top:-16px;left:0;
+  font-family:'DM Mono',monospace;font-size:7px;
+  color:#ff6600;background:rgba(0,0,0,.8);
+  padding:1px 5px;border-radius:2px;white-space:nowrap;
+}
+
+/* reaction comparison */
+.rcmp{position:absolute;bottom:calc(17% + 75px);left:13%;
+  background:rgba(0,6,0,.9);border:1px solid rgba(0,255,80,.25);
+  border-radius:10px;padding:10px 14px;display:none;min-width:190px}
+.rcmp.show{display:block;animation:rcIn .4s ease}
+@keyframes rcIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.rcmp-ttl{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.18em;
+  text-transform:uppercase;color:rgba(0,255,80,.45);margin-bottom:8px}
+.rcmp-row{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.rcmp-who{font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,.45);width:52px}
+.rcmp-trk{flex:1;height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden}
+.rcmp-fil{height:100%;border-radius:3px;transition:width 1.5s cubic-bezier(.4,0,.2,1)}
+.rcmp-val{font-family:'DM Mono',monospace;font-size:11px;font-weight:700;width:36px;text-align:right}
+
 </style>
 </head>
 <body>
@@ -522,12 +606,121 @@ body{background:#000;font-family:'Exo 2',sans-serif;height:100vh;display:flex;fl
       <div class="sn" onclick="goStep(3)">4</div>
     </div>
 
+
+    <!-- UC5 IR CAMERA BOX (small, left-center) -->
+    <div class="ir-box-wrap" id="irBoxWrap">
+      <div class="ir-box-bg"></div>
+      <div class="ir-box-header">
+        <div class="ir-box-title">
+          <div class="ir-box-dot"></div>
+          Camera Infrarouge
+        </div>
+        <div class="ir-box-time" id="irTime">22:14</div>
+      </div>
+      <svg class="ir-box-svg" viewBox="0 0 200 120"
+        preserveAspectRatio="xMidYMid slice"
+        xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="bHeat" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#ff6600" stop-opacity=".95"/>
+            <stop offset="40%" stop-color="#ff3300" stop-opacity=".75"/>
+            <stop offset="100%" stop-color="#440000" stop-opacity="0"/>
+          </radialGradient>
+          <radialGradient id="hHeat" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#ffbb00" stop-opacity="1"/>
+            <stop offset="55%" stop-color="#ff6600" stop-opacity=".75"/>
+            <stop offset="100%" stop-color="#ff3300" stop-opacity="0"/>
+          </radialGradient>
+          <radialGradient id="lHeat" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#bb3300" stop-opacity=".65"/>
+            <stop offset="100%" stop-color="#440000" stop-opacity="0"/>
+          </radialGradient>
+          <filter id="bBlur"><feGaussianBlur stdDeviation="3"/></filter>
+          <filter id="sBlur"><feGaussianBlur stdDeviation="1.5"/></filter>
+          <linearGradient id="tScale" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#ffbb00"/>
+            <stop offset="50%" stop-color="#ff4400"/>
+            <stop offset="100%" stop-color="#001a04"/>
+          </linearGradient>
+        </defs>
+        <!-- cold sky -->
+        <rect width="200" height="120" fill="#000a01"/>
+        <!-- distant mountains -->
+        <polygon points="-5,85 25,48 55,66 85,28 110,52 140,32 170,58 200,40 200,120 -5,120" fill="#001204"/>
+        <!-- warm road (asphalt retains heat) -->
+        <polygon points="60,120 82,65 118,65 140,120" fill="#002508"/>
+        <line x1="100" y1="120" x2="100" y2="67"
+          stroke="#003a10" stroke-width="1.5" stroke-dasharray="8,7" opacity=".5"/>
+        <!-- cold trees -->
+        <ellipse cx="16" cy="88" rx="12" ry="16" fill="#000d02"/>
+        <ellipse cx="184" cy="86" rx="12" ry="16" fill="#000d02"/>
+        <!-- ═ CHAMOIS thermal signature ═ -->
+        <ellipse id="aGlow" cx="100" cy="54" rx="22" ry="16"
+          fill="url(#bHeat)" filter="url(#bBlur)" opacity="0"/>
+        <ellipse id="aBody" cx="100" cy="56" rx="13" ry="8"
+          fill="#ff4400" opacity="0"/>
+        <ellipse id="aHead" cx="111" cy="48" rx="6" ry="5.5"
+          fill="url(#hHeat)" filter="url(#sBlur)" opacity="0"/>
+        <ellipse id="aNeck" cx="107" cy="51" rx="4" ry="3.5"
+          fill="#ff5a00" opacity="0"/>
+        <ellipse id="aL1" cx="92" cy="63" rx="2" ry="5"
+          fill="url(#lHeat)" filter="url(#sBlur)" opacity="0"/>
+        <ellipse id="aL2" cx="97" cy="64" rx="2" ry="5"
+          fill="url(#lHeat)" filter="url(#sBlur)" opacity="0"/>
+        <ellipse id="aL3" cx="103" cy="63" rx="2" ry="5"
+          fill="url(#lHeat)" filter="url(#sBlur)" opacity="0"/>
+        <ellipse id="aL4" cx="108" cy="62" rx="2" ry="5"
+          fill="url(#lHeat)" filter="url(#sBlur)" opacity="0"/>
+        <line id="aH1" x1="112" y1="44" x2="114" y2="38"
+          stroke="#003a10" stroke-width="1.2" opacity="0"/>
+        <line id="aH2" x1="116" y1="44" x2="118" y2="38"
+          stroke="#003a10" stroke-width="1.2" opacity="0"/>
+        <!-- temp scale -->
+        <rect x="188" y="10" width="5" height="32" rx="1" fill="url(#tScale)"/>
+        <text x="186" y="13" font-family="monospace" font-size="4.5"
+          fill="rgba(0,255,80,.35)" text-anchor="end">+</text>
+        <text x="186" y="43" font-family="monospace" font-size="4.5"
+          fill="rgba(0,255,80,.25)" text-anchor="end">-</text>
+        <!-- 80m distance marker -->
+        <text x="68" y="62" font-family="monospace" font-size="5"
+          fill="rgba(0,255,80,.3)">80m</text>
+        <line x1="73" y1="60" x2="87" y2="54"
+          stroke="rgba(0,255,80,.12)" stroke-width=".8" stroke-dasharray="2,2"/>
+      </svg>
+    </div>
+
+    <!-- detection box -->
+    <div class="ir-det" id="irDet">
+      <div class="ir-det-lbl">MAMMIFERE 38.2 C</div>
+    </div>
+
+    <!-- reaction time comparison -->
+    <!-- reaction time comparison -->
+    <div class="rcmp" id="rcmp">
+      <div class="rcmp-ttl">Temps de reaction</div>
+      <div class="rcmp-row">
+        <span class="rcmp-who">Humain</span>
+        <div class="rcmp-trk">
+          <div class="rcmp-fil" id="rcH" style="width:0%;background:var(--o)"></div>
+        </div>
+        <span class="rcmp-val" id="rcHv" style="color:var(--o)">1.2s</span>
+      </div>
+      <div class="rcmp-row" style="margin-bottom:0">
+        <span class="rcmp-who">IA</span>
+        <div class="rcmp-trk">
+          <div class="rcmp-fil" id="rcA" style="width:0%;background:var(--g)"></div>
+        </div>
+        <span class="rcmp-val" id="rcAv" style="color:var(--g)">0.05s</span>
+      </div>
+    </div>
+
     <!-- UC BAR -->
     <div class="uc-bar">
       <button class="ucb" style="--uc:var(--y)" onclick="loadUC(0)"><span class="ucb-icon">⛽</span>Carburant</button>
       <button class="ucb" style="--uc:var(--o)" onclick="loadUC(1)"><span class="ucb-icon">🫀</span>Malaise</button>
       <button class="ucb" style="--uc:var(--b)" onclick="loadUC(2)"><span class="ucb-icon">🎓</span>Débutant</button>
       <button class="ucb" style="--uc:var(--ice)" onclick="loadUC(3)"><span class="ucb-icon">🏔</span>Avalanche</button>
+      <button class="ucb" style="--uc:var(--g)" onclick="loadUC(4)"><span class="ucb-icon">🦌</span>Faune IR</button>
     </div>
   </div>
 </div>
@@ -676,6 +869,7 @@ function resetScene(){
   $('authA').classList.remove('pulse');
   $('roadZone').classList.remove('show');
   $('phaseBar').classList.remove('show');$('phaseBar').innerHTML='';
+  if(typeof hideIR==='function'){hideIR();}
   setHudPassive(true);
   setEKG('normal','var(--g)');
 }
@@ -1008,12 +1202,199 @@ function applyAlpStep(){
   setHudPassive(false);
 }
 
+
+/* ════ UC4 — FAUNE NOCTURNE IR ════ */
+var irAF = null;
+
+function irShow(id, v) {
+  var el = document.getElementById(id);
+  if (el) el.classList.toggle('show', v);
+}
+
+function irParts(op) {
+  var ids = ['aGlow','aBody','aHead','aNeck','aL1','aL2','aL3','aL4','aH1','aH2'];
+  for (var i = 0; i < ids.length; i++) {
+    var el = document.getElementById(ids[i]);
+    if (el) el.setAttribute('opacity', op);
+  }
+}
+
+function irDetPos() {
+  var wrap = document.getElementById('irBoxWrap');
+  var ws = document.getElementById('ws');
+  if (!wrap || !ws) return;
+  var wr2 = wrap.getBoundingClientRect();
+  var wsr = ws.getBoundingClientRect();
+  /* animal in SVG viewBox 200x120 (usable area below 20px header)
+     aGlow center ~100,54 — box ~78-122 x 40-70 */
+  var boxH = wr2.height - 20; /* subtract header */
+  var scX = wr2.width / 200;
+  var scY = boxH / 120;
+  var bx = (wr2.left - wsr.left) + (80 * scX);
+  var by = (wr2.top - wsr.top) + 20 + (38 * scY);
+  var bw = 44 * scX;
+  var bh = 36 * scY;
+  var det = document.getElementById('irDet');
+  det.style.left = bx + 'px';
+  det.style.top = by + 'px';
+  det.style.width = bw + 'px';
+  det.style.height = bh + 'px';
+}
+
+function hideIR() {
+  irShow('irBoxWrap', false);
+  irShow('irDet', false);
+  irShow('rcmp', false);
+  irParts(0);
+  cancelAnimationFrame(irAF);
+}
+
+function loadUC4() {
+  resetScene();
+  /* Night context */
+  $('rsub').textContent = 'Route du Mont-Blanc';
+  $('rmain').textContent = 'Chamonix — 22h14';
+  $('wx1').textContent = 'Nuit — 3C';
+  $('wx2').textContent = 'D1506 km 8';
+  $('spdLimit').textContent = '80';
+  $('spdLimit').className = 'spd-limit';
+  setSpeed(76);
+  setAuth(80, 18);
+  $('fuelFill').style.width = '55%';
+  $('fuelFill').style.background = 'var(--g)';
+  $('fuelKm').textContent = '130 km';
+  $('fuelKm').style.color = 'var(--w)';
+  show('mts', true);
+  show('alp', true);
+  setHudPassive(false);
+
+  /* Phase 1 — normal view, AI notices something */
+  setNotif(
+    'IA — Surveillance nocturne', 'var(--g)',
+    'Mode nuit actif — analyse en cours',
+    94, 'var(--g)', 'rgba(0,255,80,.2)'
+  );
+  $('notif').style.borderColor = 'rgba(0,255,80,.25)';
+
+  /* Phase 2 — IR camera activates, split screen appears */
+  setTimeout(function() {
+    irShow('irBoxWrap', true);
+    irParts(0);
+    setNotif(
+      'IA — Camera IR', 'rgba(0,255,130,1)',
+      'Camera thermique activee — zone analysee',
+      94, 'rgba(0,255,130,1)', 'rgba(0,255,80,.2)'
+    );
+    $('notif').style.borderColor = 'rgba(0,255,80,.3)';
+    addBtns([], 'var(--g)');
+
+    /* Phase 3 — animal appears gradually in IR side only */
+    setTimeout(function() {
+      var op = 0;
+      function fadeIn() {
+        op = Math.min(1, op + 0.045);
+        irParts(op);
+        if (op < 1) {
+          irAF = requestAnimationFrame(fadeIn);
+        } else {
+          onIRAnimalVisible();
+        }
+      }
+      irAF = requestAnimationFrame(fadeIn);
+    }, 1800);
+  }, 1000);
+}
+
+function onIRAnimalVisible() {
+  irDetPos();
+  irShow('irDet', true);
+  ring('orange');
+  animSpeed(0, 3200);
+  $('rl').className = 'road-l slow';
+  setAuth(12, 86, 'var(--o)');
+
+  setNotif(
+    'IA — Detection Faune', '#ff6600',
+    'Animal detecte 80m — IA freine en 0.05s',
+    99, '#ff6600', 'rgba(255,100,0,.3)', true
+  );
+  $('notif').style.borderColor = 'rgba(255,100,0,.5)';
+
+  /* Show reaction bars */
+  setTimeout(function() {
+    irShow('rcmp', true);
+    setTimeout(function() {
+      $('rcH').style.width = '100%';
+      $('rcA').style.width = '4.2%';
+    }, 200);
+  }, 700);
+
+  /* Phase 4 — animal crosses, fades in IR */
+  setTimeout(function() {
+    var op = 1;
+    function fadeOut() {
+      op = Math.max(0, op - 0.035);
+      irParts(op);
+      if (op > 0) {
+        irAF = requestAnimationFrame(fadeOut);
+      } else {
+        onIRAnimalClear();
+      }
+    }
+    irAF = requestAnimationFrame(fadeOut);
+  }, 4000);
+}
+
+function onIRAnimalClear() {
+  irShow('irDet', false);
+  ring('');
+  setAuth(78, 20, 'var(--g)');
+
+  setNotif(
+    'IA — Danger ecarte', 'var(--g)',
+    'Animal passe — route libre. Vous reprenez ?',
+    97, 'var(--g)', 'rgba(0,255,180,.2)'
+  );
+  $('notif').style.borderColor = 'rgba(0,255,180,.3)';
+
+  addBtns([
+    {
+      label: 'Je reprends',
+      primary: true,
+      cb: function() {
+        hideIR();
+        animSpeed(68, 2000);
+        $('rl').className = 'road-l';
+        ring('');
+        setAuth(80, 18);
+        setNotif('IA — Surveillance', 'var(--g)', 'Route libre. Bonne route.', 95, 'var(--g)', 'rgba(0,255,180,.15)');
+        addBtns([], 'var(--g)');
+        setHudPassive(true);
+      },
+      resp: {
+        color: 'var(--g)',
+        bg: 'rgba(0,255,180,.08)',
+        msg: 'Controle manuel. IA reste en veille thermique.'
+      }
+    },
+    {
+      label: 'Pourquoi si vite ?',
+      primary: false,
+      resp: {
+        color: 'var(--b)',
+        bg: 'rgba(64,208,255,.08)',
+        msg: 'Humain 1.2s (perception + decision + action). IA 0.05s (capteur direct). Facteur x24.'
+      }
+    }
+  ], 'var(--g)');
+}
+
 /* ════ UC LOADER ════ */
 let curUC=-1;
 function loadUC(i){
   if(i===curUC)return;curUC=i;
   document.querySelectorAll('.ucb').forEach((b,idx)=>b.classList.toggle('active',idx===i));
-  [loadUC0,loadUC1,loadUC2,loadUC3][i]();
+  [loadUC0,loadUC1,loadUC2,loadUC3,loadUC4][i]();
 }
 
 /* ── Voice synthesis (medical) ── */
